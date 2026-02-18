@@ -35,7 +35,7 @@
 //           no: clear all the marks for the old children
 // After canonicalization, we take another pass looking for chemical equations and marking them if found.
 
-use sxd_document::dom::*;
+use sxd_document::dom::{Element, Document, ChildOfElement};
 use crate::canonicalize::*;
 use crate::pretty_print::mml_to_string;
 use crate::xpath_functions::{is_leaf, IsNode};
@@ -776,7 +776,10 @@ fn is_chemistry_sanity_check(mathml: Element) -> bool {
                 }
                 return false;
             },
-            "msub" | "msup" | "msubsup" | "mmultiscripts" => return gather_chemical_elements(get_possible_embellished_node(mathml), chem_elements),
+            "msub" | "msup" | "msubsup" | "mmultiscripts" => {
+                gather_chemical_elements(get_possible_embellished_node(mathml), chem_elements);
+                return name(mathml) == "mmultiscripts" && mathml.children().len() % 2 == 0; // <mprescripts/> => even number of children
+            },
             "semantics" => {
                 return gather_chemical_elements( get_presentation_element(mathml).1, chem_elements );
             },
@@ -1309,7 +1312,7 @@ pub fn likely_adorned_chem_formula(mathml: Element) -> isize {
     let children = mathml.children();
     let mut likelihood = 0;
     let mut is_empty_subscript = false;
-    debug!("likely_adorned_chem_formula:\n{}", mml_to_string(mathml));
+    // debug!("likely_adorned_chem_formula:\n{}", mml_to_string(mathml));
     if tag_name == "msub" || tag_name == "msubsup" {
         // subscripts should be just a number, although they could be 'n' or '2n' or other exprs.
         let subscript = as_element(children[1]);
@@ -1454,10 +1457,8 @@ pub fn likely_adorned_chem_formula(mathml: Element) -> isize {
 /// useful function to see if the str is a single char matching the predicate
 fn is_single_char_matching(leaf_text: &str, pred: impl Fn(char) -> bool) -> bool {
     let mut chars = leaf_text.chars();
-    if let Some(ch) = chars.next() {
-        if chars.next().is_none() {
-            return pred(ch);
-        }
+    if let Some(ch) = chars.next() && chars.next().is_none() {
+        return pred(ch);
     }
     return false;
 }
