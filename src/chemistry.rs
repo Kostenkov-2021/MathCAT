@@ -606,7 +606,7 @@ fn is_changed_after_unmarking_chemistry(mathml: Element) -> bool {
             assert_eq!(name(mathml), "mmultiscripts");
             let mut script_children = mathml.children();
             assert_eq!(name(as_element(script_children[0])), "mi");
-            assert_eq!(script_children.len() % 2, 1);  // doesn't have <mprescripts/>
+            assert!(!script_children.len().is_multiple_of(2));  // doesn't have <mprescripts/>
             script_children.push(first_element_children[1]);    // mprescripts
             script_children.push(first_element_children[2]);    // prescripts subscript
             script_children.push(first_element_children[3]);    // prescripts superscript
@@ -815,7 +815,7 @@ fn is_chemistry_sanity_check(mathml: Element) -> bool {
     fn has_numerical_prescripts(mathml: Element) -> bool {
         let children = mathml.children();
         // quick check to see if there is an mprescripts child
-        if children.len() % 2 != 0 { // <mprescripts/> => even number of children
+        if !children.len().is_multiple_of(2) { // <mprescripts/> => even number of children
             return false;
         }
         // we need enumerate because the "step_by" will cause any returned iterator to jump ahead by 2
