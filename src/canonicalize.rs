@@ -2772,6 +2772,9 @@ impl CanonicalizeContext {
 		}
 
 		fn handle_convert_to_mmultiscripts(children: &mut Vec<ChildOfElement>) {
+			if children.len() == 1 {
+				return;		// can't convert to mmultiscripts if there is nothing to attach an empty base to
+			}
   			let mut i = 0;
 			// convert_to_mmultiscripts changes 'children', so can't cache length
 			while i < children.len() {
