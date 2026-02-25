@@ -905,6 +905,10 @@ impl CanonicalizeContext {
 					// people tend to set them in a non-italic font and software makes that 'mtext'
 					CanonicalizeContext::make_roman_numeral(mathml);
 					return Some(mathml);
+				} else if text.chars().all(|c| c.is_ascii_digit() || matches!(c, '.' | ',' | ' ' | '\u{00A0}')) &&
+				          text.chars().any(|c| c.is_ascii_digit()){  // does it look like a number?
+					mathml.set_name("mn");
+					return Some(mathml);
 				} else if contains_currency(text) && let Some(result) = split_currency_symbol(mathml) {
 					return Some(result);
 				}
