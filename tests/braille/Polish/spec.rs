@@ -493,7 +493,7 @@ fn sets_p18_4() -> Result<()> {
 
 #[test]
 fn sets_p18_5() -> Result<()> {
-    let expr = r#"<math><mi>x</mi><mo>&#x2208;</mo><mi>A</mi><mo>&#x2216;</mo><mi>B</mi><mo>&#xA0;</mo><mtext>wtedy i tylko wtedy gdy </mtext><mo>(</mo><mi>x</mi><mo>&#x2208;</mo><mi>A</mi><mo>&#xA0;</mo><mi>i</mi><mo>&#xA0;</mo><mi>x</mi><mo>&#x2209;</mo><mi>B</mi><mo>)</mo></math>"#;
+    let expr = r#"<math><mi>x</mi><mo>&#x2208;</mo><mi>A</mi><mo>&#x2216;</mo><mi>B</mi><mtext>&#xA0;wtedy i tylko wtedy gdy </mtext><mo>(</mo><mi>x</mi><mo>&#x2208;</mo><mi>A</mi><mo>&#xA0;</mo><mi>i</mi><mo>&#xA0;</mo><mi>x</mi><mo>&#x2209;</mo><mi>B</mi><mo>)</mo></math>"#;
     test_braille("Polish", expr, r"⠠⠭⠀⠈⠑⠨⠁⠀⠡⠄⠨⠃⠀⠺⠞⠑⠙⠽⠀⠊⠀⠞⠽⠇⠅⠕⠀⠺⠞⠑⠙⠽⠀⠛⠙⠽⠀⠣⠠⠭⠀⠈⠑⠨⠁⠀⠊⠀⠠⠭⠀⠔⠈⠑⠨⠃⠜")?;
     return Ok(());
 }
@@ -1896,14 +1896,14 @@ fn functions_p43_4() -> Result<()> {
 
 #[test]
 fn cases_p43_1() -> Result<()> {
-    let expr = r#"<math><mo>&#x2223;</mo><mi>x</mi><mo>&#x2223;=</mo><mfenced open="{" close="" separators="|"><mtable columnspacing="1em" columnalign="left left"><mtr><mtd><mo>&#x2212;</mo><mi>x</mi><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>&lt;</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd><mspace width="1em"/><mn>0</mn><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>=</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd><mspace width="1em"/><mi>x</mi><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>&gt;</mo><mn>0.</mn><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo></mtd></mtr></mtable></mfenced></math>"#;
+    let expr = r#"<math><mo>|</mo><mi>x</mi><mo>|</mo><mo>=</mo><mfenced open="{" close="" separators="|"><mtable columnspacing="1em" columnalign="left left" intent=":piecewise"><mtr><mtd><mo>&#x2212;</mo><mi>x</mi><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>&lt;</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd><mspace width="1em"/><mn>0</mn><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>=</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd><mspace width="1em"/><mi>x</mi><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>&gt;</mo><mn>0.</mn><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo></mtd></mtr></mtable></mfenced></math>"#;
     test_braille("Polish", expr, "⠈⠇⠠⠭⠸⠀⠶⠪⠀⠤⠭⠀⠙⠇⠁⠀⠠⠭⠀⠪⠄⠼⠚⠠⠂⠀⠰⠳⠀⠼⠚⠀⠙⠇⠁⠀⠠⠭⠀⠶⠼⠚⠠⠂⠀⠰⠳⠀⠭⠀⠙⠇⠁⠀⠠⠭⠀⠕⠂⠼⠚⠄")?;
     return Ok(());
 }
 
 #[test]
 fn cases_p43_2() -> Result<()> {
-    let expr = r#"<math><mi>sgn</mi><mi>x</mi><mo>=</mo><mfenced open="{" close="" separators="|"><mtable columnspacing="1em" columnalign="left left"><mtr><mtd><mo>&#x2212;</mo><mn>1</mn><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>&lt;</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd><mn>0</mn><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>=</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd><mn>1</mn><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>&gt;</mo><mn>0.</mn><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo></mtd></mtr></mtable></mfenced></math>"#;
+    let expr = r#"<math><mi>sgn</mi><mi>x</mi><mo>=</mo><mfenced open="{" close="" separators="|"><mtable columnspacing="1em" columnalign="left left" intent=":piecewise"><mtr><mtd><mo>&#x2212;</mo><mn>1</mn><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>&lt;</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd><mn>0</mn><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>=</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd><mn>1</mn><mo>&#xA0;</mo><mi>dla</mi><mo>&#xA0;</mo><mi>x</mi><mo>&gt;</mo><mn>0.</mn><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo></mtd></mtr></mtable></mfenced></math>"#;
     test_braille("Polish", expr, "⠈⠼⠎⠠⠭⠀⠶⠪⠀⠤⠼⠁⠀⠙⠇⠁⠀⠠⠭⠀⠪⠄⠼⠚⠠⠂⠀⠰⠳⠀⠼⠚⠀⠙⠇⠁⠀⠠⠭⠀⠶⠼⠚⠠⠂⠀⠰⠳⠀⠼⠁⠀⠙⠇⠁⠀⠠⠭⠀⠕⠂⠼⠚⠄")?;
     return Ok(());
 }
@@ -1924,7 +1924,7 @@ fn cases_p43_4() -> Result<()> {
 
 #[test]
 fn systems_of_equations_p44_1() -> Result<()> {
-    let expr = r#"<math><mfenced open="{" close="" separators="|"><mtable columnspacing="1em" columnalign="left left"><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mrow><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mo>(</mo><mi>x</mi><mo>&#x2212;</mo><mn>2</mn><mo>)</mo><mo>=</mo><mi>x</mi><mo>&#x2212;</mo><mn>10</mn></mrow></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>x</mi><mo>&#x2212;</mo><mn>6</mn><mo>=</mo><mi>x</mi><mo>&#x2212;</mo><mn>10</mn></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mn>5</mn><mi>x</mi><mo>&#x2212;</mo><mn>6</mn><mo>=</mo><mi>x</mi><mo>&#x2212;</mo><mn>10</mn></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mn>5</mn><mi>x</mi><mo>&#x2212;</mo><mi>x</mi><mo>=</mo><mn>6</mn><mo>&#x2212;</mo><mn>10</mn></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mn>4</mn><mi>x</mi><mo>=</mo><mo>&#x2212;</mo><mn>4</mn><mo>&#x2223;:</mo><mn>4</mn></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mi>x</mi><mo>=</mo><mo>&#x2212;</mo><mn>1</mn></mtd></mtr></mtable></mfenced></math>"#;
+    let expr = r#"<math><mtable columnspacing="1em" columnalign="left left"><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mrow><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mo>(</mo><mi>x</mi><mo>&#x2212;</mo><mn>2</mn><mo>)</mo><mo>=</mo><mi>x</mi><mo>&#x2212;</mo><mn>10</mn></mrow></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>x</mi><mo>&#x2212;</mo><mn>6</mn><mo>=</mo><mi>x</mi><mo>&#x2212;</mo><mn>10</mn></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mn>5</mn><mi>x</mi><mo>&#x2212;</mo><mn>6</mn><mo>=</mo><mi>x</mi><mo>&#x2212;</mo><mn>10</mn></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mn>5</mn><mi>x</mi><mo>&#x2212;</mo><mi>x</mi><mo>=</mo><mn>6</mn><mo>&#x2212;</mo><mn>10</mn></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mn>4</mn><mi>x</mi><mo>=</mo><mo>&#x2212;</mo><mn>4</mn><mo>&#x2223;:</mo><mn>4</mn></mtd></mtr><mtr><mtd><mo>&#x2005;&#x2005;&#x2005;&#x2005;</mo><mi>x</mi><mo>=</mo><mo>&#x2212;</mo><mn>1</mn></mtd></mtr></mtable></math>"#;
     test_braille("Polish", expr, "⠼⠃⠄⠭⠀⠖⠼⠉⠣⠭⠀⠤⠼⠃⠜⠀⠶⠭⠀⠤⠼⠁⠚⠀⠐⠶⠂⠼⠃⠠⠭⠀⠖⠼⠉⠭⠀⠤⠼⠋⠀⠶⠭⠀⠤⠼⠁⠚⠀⠐⠶⠂⠼⠑⠠⠭⠀⠤⠼⠋⠀⠶⠭⠀⠤⠼⠁⠚⠀⠐⠶⠂⠼⠑⠠⠭⠀⠤⠭⠀⠶⠼⠋⠀⠤⠼⠁⠚⠀⠐⠶⠂⠼⠙⠠⠭⠀⠶⠤⠼⠙⠀⠸⠀⠲⠼⠙⠀⠐⠶⠂⠠⠭⠀⠶⠤⠼⠁")?;
     return Ok(());
 }
@@ -2243,7 +2243,7 @@ fn trigonometry_p52_6b() -> Result<()> {
 
 #[test]
 fn trigonometry_p52_7() -> Result<()> {
-    let expr = r#"<math><mi>tg</mi><mfenced separators="|"><mfrac><mrow><msup><mn>90</mn><mo>&#x2218;</mo></msup><mo>&#x2212;</mo><mi>&#x3B1;</mi></mrow><mn>2</mn></mfrac></mfenced></math>"#;
+    let expr = r#"<math><mi>tg</mi><mfenced separators="|"><mfrac><mrow><msup><mn>90</mn><mo>°</mo></msup><mo>&#x2212;</mo><mi>&#x3B1;</mi></mrow><mn>2</mn></mfrac></mfenced></math>"#;
     test_braille("Polish", expr, "⠫⠞⠀⠼⠊⠚⠴⠈⠤⠰⠁⠳⠆")?;
     return Ok(());
 }
@@ -2253,7 +2253,7 @@ fn trigonometry_p52_7() -> Result<()> {
 #[test]
 #[ignore = "alternative rendering"]
 fn trigonometry_p52_7a() -> Result<()> {
-    let expr = r#"<math><mi>tg</mi><mfenced separators="|"><mfrac><mrow><msup><mn>90</mn><mo>&#x2218;</mo></msup><mo>&#x2212;</mo><mi>&#x3B1;</mi></mrow><mn>2</mn></mfrac></mfenced></math>"#;
+    let expr = r#"<math><mi>tg</mi><mfenced><mfrac><mrow><msup><mn>90</mn><mo>&#x2218;</mo></msup><mo>&#x2212;</mo><mi>&#x3B1;</mi></mrow><mn>2</mn></mfrac></mfenced></math>"#;
     test_braille("Polish", expr, "⠫⠞⠆⠼⠊⠚⠴⠈⠤⠰⠁⠳⠆")?;
     return Ok(());
 }
@@ -2263,7 +2263,7 @@ fn trigonometry_p52_7a() -> Result<()> {
 #[test]
 #[ignore = "alternative rendering"]
 fn trigonometry_p52_7b() -> Result<()> {
-    let expr = r#"<math><mi>tg</mi><mfenced separators="|"><mfrac><mrow><msup><mn>90</mn><mo>&#x2218;</mo></msup><mo>&#x2212;</mo><mi>&#x3B1;</mi></mrow><mn>2</mn></mfrac></mfenced></math>"#;
+    let expr = r#"<math><mi>tg</mi><mfenced><mfrac><mrow><msup><mn>90</mn><mo>&#x2218;</mo></msup><mo>&#x2212;</mo><mi>&#x3B1;</mi></mrow><mn>2</mn></mfrac></mfenced></math>"#;
     test_braille("Polish", expr, "⠫⠞⠆⠼⠊⠚⠴⠀⠤⠰⠁⠀⠳⠀⠼⠃")?;
     return Ok(());
 }
