@@ -236,7 +236,12 @@
   name: default-mtable
   tag: mtable
   match: "."
+  variables: [MergeMTD: "@data-intent-property[contains(., ':piecewise:') or contains(., ':system-of-equations:') or contains(., ':lines:')]"]
   replace:
+  - test:
+    # p43 adds a space after the open brace
+      if: "preceding-sibling::*[1][.='{']"
+      then: [t: "W"]
   - x: "*"
 
 
@@ -270,9 +275,9 @@
   match: "."
   replace:
   - test:
-      if: "*"
+      if: "* and not($MergeMTD)"
       then:
-      - test: 
+      - test:
          if: "preceding-sibling::*"
          then: [t: "W"]
       - t: "<⠆-" # signal start of fraction (needed for depth count because of tables are off the baseline -- '-' says to delete the start/end)
