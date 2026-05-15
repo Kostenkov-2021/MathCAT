@@ -236,7 +236,7 @@
   name: default-mtable
   tag: mtable
   match: "."
-  variables: [MergeMTD: "@data-intent-property[contains(., ':piecewise:') or contains(., ':system-of-equations:') or contains(., ':lines:')]"]
+  variables: [MergeMTD: "@intent[contains(., ':piecewise') or contains(., ':system-of-equations') or contains(., ':lines')]"]
   replace:
   - test:
     # p43 adds a space after the open brace
@@ -280,10 +280,9 @@
       - test:
          if: "preceding-sibling::*"
          then: [t: "W"]
-      - t: "<⠆-" # signal start of fraction (needed for depth count because of tables are off the baseline -- '-' says to delete the start/end)
-      - x: "*"
-      - t: ">⠰-" # not sure if this should be some other indicator; for now using the fraction indicator seems to be ok
-      # else nothing to braille
+  - t: "<⠆-" # signal start of fraction (needed for depth count because of tables are off the baseline -- '-' says to delete the start/end)
+  - x: "*"
+  - t: ">⠰-" # not sure if this should be some other indicator; for now using the fraction indicator seems to be ok
 
 -
   name: no-content
