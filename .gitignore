@@ -1,6 +1,7 @@
 .idea
 .DS_Store
 target
+notes/
 build.rs.orig
 Python/libmathcat.pyd
 Cargo.lock
