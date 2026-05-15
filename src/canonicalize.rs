@@ -3606,11 +3606,10 @@ impl CanonicalizeContext {
 		};
 	
 		let operator_versions = OperatorVersions::new(op);
-		if let Some(prefix) = operator_versions.prefix {
-			if top(parse_stack).last_child_in_mrow().is_none() || !top(parse_stack).is_operand {
+		if let Some(prefix) = operator_versions.prefix &&
+			(top(parse_stack).last_child_in_mrow().is_none() || !top(parse_stack).is_operand) {
 				// debug!("   is prefix");
 				return prefix;
-			}
 		}
 		
 		// We have either a right fence or an infix operand at the top of the stack
@@ -3650,11 +3649,10 @@ impl CanonicalizeContext {
 		}
 	
 		let next_child = next_child.unwrap();
-		if n_vertical_bars_on_right & 0x1 != 0 {
-			if let Some(prefix) = operator_versions.prefix {
+		if n_vertical_bars_on_right & 0x1 != 0 &&
+		   let Some(prefix) = operator_versions.prefix {
 				// 	("   is prefix");
 				return prefix;		// odd number of vertical bars remain, so consider this the start of a pair
-			}
 		}
 	
 		let next_child = get_possible_embellished_node(next_child);
