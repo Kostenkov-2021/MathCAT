@@ -139,11 +139,13 @@ pub fn test_braille(code: &str, mathml: &str, braille: &str) -> Result<()> {
         set_preference("BrailleCode", code).unwrap();
         set_preference("LaTeX_UseShortName", "false").unwrap();
         set_preference("Polish_BrailleLevel".to_string(), "Advanced".to_string()).unwrap();
+        // This sets the DecimalSeparator and BlockSeparators for the braille codes
         // FIX: this shouldn't need to be done -- need to figure out how to get definitions set automatically
         // log::debug!("\nsetting Language");
         match code {
             "Vietnam" => set_preference("Language", "vi").unwrap(),
             "CMU" => set_preference("Language", "es").unwrap(),
+            "Polish" => set_preference("Language".to_string(), "pl".to_string()).unwrap(),
             _ => set_preference("Language", "en").unwrap(),
         }
         if let Err(e) = set_mathml(mathml) {
@@ -166,11 +168,13 @@ pub fn test_braille_prefs(code: &str, test_prefs: Vec<(&str, &str)>, mathml: &st
         set_preference("DecimalSeparator", "Auto").unwrap();
         set_preference("BrailleCode", code).unwrap();
 
+        // This sets the DecimalSeparator and BlockSeparators for the braille codes
         // FIX: this shouldn't need to be done -- need to figure out how to get definitions set automatically
         // log::debug!("\nsetting Language");
         match code {
             "Vietnam" => set_preference("Language", "vi").unwrap(),
             "CMU" => set_preference("Language", "es").unwrap(),
+            "Polish" => set_preference("Language".to_string(), "pl".to_string()).unwrap(),
             _ => set_preference("Language", "en").unwrap(),
         }
 
@@ -271,11 +275,13 @@ pub fn test_from_braille(code: &str, mathml: &str, braille: &str) -> Result<()> 
         set_preference("BrailleCode", code).unwrap();
         set_preference("LaTeX_UseShortName", "false").unwrap();
         set_preference("Polish_BrailleLevel".to_string(), "Advanced".to_string()).unwrap();
+        // This sets the DecimalSeparator and BlockSeparators for the braille codes
         // FIX: this shouldn't need to be done -- need to figure out how to get definitions set automatically
         // log::debug!("\nsetting Language");
         match code {
             "Vietnam" => set_preference("Language", "vi").unwrap(),
             "CMU" => set_preference("Language", "es").unwrap(),
+            "Polish" => set_preference("Language".to_string(), "pl".to_string()).unwrap(),
             _ => set_preference("Language", "en").unwrap(),
         }
         if let Err(e) = set_mathml(mathml) {
