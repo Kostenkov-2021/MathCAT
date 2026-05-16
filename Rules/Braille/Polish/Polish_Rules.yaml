@@ -275,14 +275,14 @@
   match: "."
   replace:
   - test:
-      if: "* and not($MergeMTD)"
+      if: "*"
       then:
       - test:
-         if: "preceding-sibling::*"
+         if: "not($MergeMTD) and preceding-sibling::*"
          then: [t: "W"]
-  - t: "<⠆-" # signal start of fraction (needed for depth count because of tables are off the baseline -- '-' says to delete the start/end)
-  - x: "*"
-  - t: ">⠰-" # not sure if this should be some other indicator; for now using the fraction indicator seems to be ok
+      - t: "<⠆-" # signal start of fraction (needed for depth count because of tables are off the baseline -- '-' says to delete the start/end)
+      - x: "*"
+      - t: ">⠰-" # not sure if this should be some other indicator; for now using the fraction indicator seems to be ok
 
 -
   name: no-content
