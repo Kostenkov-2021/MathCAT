@@ -104,7 +104,7 @@
   - pause: short
   - test:
       if: "$Impairment = 'Blindness'"
-      then: [T: "fine fratto"]          # phrase("start of fraction x over y 'end over'")
+      then: [T: "fine frazione"]          # phrase("start of fraction x over y 'end over'")
   - pause: medium
 
 
@@ -115,7 +115,7 @@
   replace:
   - test:
       if: "$Verbosity!='Terse'"
-      then: [T: "la"]    # phrase("'the' root of x")
+      then: [T: ""]    # phrase("'the' root of x"), in ITA say nothing even with high verbosity
   - T: "radice"
   - test:
       if: "$Verbosity!='Terse'"
@@ -124,7 +124,7 @@
   - pause: short
   - test:
       if: "not(IsNode(*[1],'leaf')) or $Impairment = 'Blindness'"
-      then: [T: "fine simbolo di radice"] # phrase("root of x 'end root symbol'")
+      then: [T: "fine radice"] # phrase("root of x 'end root symbol'")
 
 # not sure what really should be said for these since we should not assume they are square roots
 - name: structure-default
@@ -134,7 +134,7 @@
   - test:
       if: "$Verbosity!='Terse'"
       then: [T: ""]   # phrase("'the' root of x")
-  - T: "simbolo di radice"
+  - T: "radice"
   - T: "con indice"      # phrase("the root of x 'with index' 5")
   - x: "*[1]"
   - pause: short
@@ -145,7 +145,7 @@
   - pause: short
   - test:
       if: "not(IsNode(*[2],'leaf'))"
-      then: [T: "fine simbolo di radice"] # phrase("root of x 'end root symbol'")
+      then: [T: "fine radice"] # phrase("root of x 'end root symbol'")
 
 
 - name: simple-sub
@@ -204,7 +204,7 @@
           else:
           - T: "elevato alla"            # phrase(5 'raised to the' second power equals 25)
           - x: "*[last()]"
-          - T: "potenza"                    # phrase(5 raised to the second 'power' equals 25)
+          - T: ""                    # phrase(5 raised to the second 'power' equals 25, in Italy we just say "raised to the 5th", 'power' is always implicit)
 
 - name: default
   tag: munder
@@ -216,7 +216,7 @@
   - x: "*[1]"
   - T: "con"      # phrase(x 'with' z below it)
   - x: "*[2]"
-  - T: "al di sotto"      # phrase(x with z 'below' it)
+  - T: "sotto"      # phrase(x with z 'below' it)
 
 - name: diacriticals
   tag: mover
@@ -487,7 +487,7 @@
       then: [T: "riquadro arrotondato", pause: short]      # phrase(the 'round box' around the expression)
   - test:
       if: ".[contains(@notation,'circle')]"
-      then: [T: "circolo", pause: short]      # phrase(the 'circle' around the expression)
+      then: [T: "cerchio", pause: short]      # phrase(the 'circle' around the expression)
   - test:
       if: ".[ contains(concat(' ', normalize-space(@notation), ' '), ' left ') or contains(concat(' ', normalize-space(@notation), ' '), ' right ') or contains(@notation,'top') or contains(@notation,'bottom') ]"
       then:
@@ -527,16 +527,16 @@
       - pause: short
   - test:
       if: ".[contains(@notation,'uparrow')]"
-      then: [T: "freccia verso l'alto", pause: short]      # phrase(direction is shown by the 'up arrow')
+      then: [T: "freccia in alto", pause: short]      # phrase(direction is shown by the 'up arrow')
   - test:
       if: ".[contains(concat(' ', normalize-space(@notation), ' '), ' downarrow ')]"
-      then: [T: "freccia verso il basso", pause: short]      # phrase(the trend is shown by the 'down arrow')
+      then: [T: "freccia in basso", pause: short]      # phrase(the trend is shown by the 'down arrow')
   - test:
       if: ".[contains(@notation,'leftarrow')]"
-      then: [T: "freccia verso sinistra", pause: short]      # phrase(the 'left arrow' indicates going back)
+      then: [T: "freccia a sinistra", pause: short]      # phrase(the 'left arrow' indicates going back)
   - test:
       if: ".[contains(concat(' ', normalize-space(@notation), ' '), ' rightarrow ')]"
-      then: [T: "freccia verso destra", pause: short]      # phrase(the 'right arrow' indicates moving forward)
+      then: [T: "freccia a destra", pause: short]      # phrase(the 'right arrow' indicates moving forward)
   - test:
       if: ".[contains(@notation,'northeastarrow')]"
       then: [T: "freccia verso nord-est", pause: short]      # phrase(direction is indicated by the 'northeast arrow')

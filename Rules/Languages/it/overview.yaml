@@ -60,7 +60,7 @@
       - else_if: "*[2][text()='3']"
         then: [T: "radice cubica"]
       - else_if: "*[2][not(contains(., '.'))]"
-        then: [x: "ToOrdinal(*[2])", T: "radice"]
+        then: [T: "radice", x: "ToOrdinal(*[2])", ]
       else:
       - test:
           if: "*[2][self::m:mi][string-length(.)=1]"

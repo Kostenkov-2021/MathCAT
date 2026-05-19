@@ -263,7 +263,7 @@
           then: [T: "lim inf"]
           else: [T: "limite inferiore"]
     - else: [x: "*[1]"]
-  - T: "quando"                      # phrase(the limit 'as' x approaches 1)
+  - T: "per"                      # phrase(the limit 'as' x approaches 1)
   - x: "*[2]"
   - pause: short
 
@@ -307,7 +307,7 @@
   - test:
       if: "$Verbosity='Verbose'"
       then: [T: "pedice"]      # phrase(a 'subscript' may be used to indicate an index)
-      else: [T: "sub"]      # phrase(the result is 'sub' optimal)
+      else: [T: "sotto"]      # phrase(the result is 'sub' optimal)
   - x: "*[2]"
   - test:
       if: "not(IsNode(*[2],'leaf') and $Impairment = 'Blindness')"
@@ -361,7 +361,7 @@
   - test:
       if: "$Verbosity='Terse'"
       then: [T: "cercare"]      # phrase(to 'seek' a solution)
-      else: [T: "secant"]      # phrase(a 'secant' intersects a curve at two or more points)
+      else: [T: "secante"]      # phrase(a 'secant' intersects a curve at two or more points)
 - name: csc
   tag: mi
   match: "text()='csc'"
@@ -388,7 +388,7 @@
   - bookmark: "@id"
   - test:
       if: "$Verbosity='Terse'"
-      then: [T: "sinH"]      # phrase(the word 'sinch' is an abbreviation for hyperbolic sine)
+      then: [T: "senH"]      # phrase(the word 'sinch' is an abbreviation for hyperbolic sine)
       else: [T: "seno iperbolico"]      # phrase(the 'hyperbolic sine' is used in mathematics)
 - name: cosh
   tag: mi
@@ -475,7 +475,7 @@
       else:
       - test:
           if: "$Verbosity!='Terse' and not(log_is_simple)"
-          then: [T: "la"]      # phrase('the' square root of 25 equals 5)
+          then: [T: ""]      # phrase('the' square root of 25 equals 5)
       - test:
         - if: "*[1][text()='log']"
           then: [T: "log"]      # phrase(the 'log' function is used in mathematics)
@@ -510,13 +510,13 @@
   - pause: medium
   - test:
       - if: "*[2][text()=2]"
-        then: [T: "quadrato"]
+        then: [T: "al quadrato"]
       - else_if: "*[2][text()=3]"
-        then: [T: "a cubetti"]
+        then: [T: "al cubo"]
         else:  # don't bother with special cases as this isn't likely to happen
-        - T: "elevato alla"      # phrase(x 'raised to the' second power)
+        - T: "elevata alla"      # phrase(x 'raised to the' second power)
         - x: "*[2]"
-        - T: "potenza"           # phrase(x raised to the second 'power')
+        - T: ""           # phrase(x raised to the second 'power')
   - pause: short
 
 - name: multi-line
@@ -656,7 +656,7 @@
   - x: "*" # select the rows (mtr)
   - test:
       if: "$ClearSpeak_Matrix = 'EndMatrix' or $ClearSpeak_Matrix = 'EndVector'"
-      then: [T: "fine della matrice"]      # phrase(the 'end of matrix' has been reached)
+      then: [T: "fine matrice"]      # phrase(the 'end of matrix' has been reached)
 
 - name: 1x2-or-3-matrix
   tag: matrix
@@ -986,7 +986,7 @@
     - else_if: ".='l'"
       then: [T: "liquido"]      # phrase(water is a 'liquid')
     - else_if: ".='g'"
-      then: [T: "gas"]      # phrase(hydrogen is a 'gas' )
+      then: [T: "gassoso"]      # phrase(hydrogen is a 'gas' )
       else: [T: "acquosa"]      # phrase(an 'aqueous' solution is contained in water)
   - pause: short
 
