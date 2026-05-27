@@ -4561,9 +4561,9 @@ pub fn get_possible_embellished_node(node: Element) -> Element {
 /// Elementary math (mstack/mlongdiv) preprocessing for speech rules.
 ///
 /// This preprocessing step annotates the MathML tree with special attributes to facilitate
-/// later processing for speech/braille and navigation. The main roles of these attributes are:
+/// later processing for speech/navigation for elementary math. The main roles of these attributes are:
 ///
-/// - `data-decimalpoint`: Set on containers ("mstack"/"mlongdiv") and sometimes "mn" children,
+/// - `data-decimalpoint`: Set on containers ("mstack"/"mlongdiv") and row elements (`msrow`, `mscarries`),
 ///   this records the decimal point character to use for parsing and formatting numbers. It helps
 ///   downstream logic handle locale-specific or unconventional decimal separators.
 ///
@@ -4602,7 +4602,7 @@ impl CanonicalizeContext {
 
 	/// Normalizes a math container (`mstack` or `mlongdiv`) by annotating it and its children
 	/// for later math processing. This sets or updates the following attributes:
-	/// - `data-decimalpoint` (on container and sometimes on "mn" children)
+	/// - `data-decimalpoint` (on container and on `msrow` / `mscarries` rows, not on `mn`)
 	/// - `data-operator` (on container, if a stack operator is detected)
 	/// 
 	/// Also coalesces consecutive "mn" elements for "mstack", and splits/expands row children
@@ -4616,13 +4616,13 @@ impl CanonicalizeContext {
 			container.set_attribute_value("data-operator", &op.to_string());
 		}
 
-		// For "mstack", merge adjacent "mn" children (carries, digits) for canonical structure
+		// `mstack` uses a uniform digit grid; `mlongdiv` keeps its legacy per-step layout.
 		if name(container) == "mstack" {
-			Self::coalesce_consecutive_mstack_mn(container, decimal_pt);
+			Self::build_mstack_grid(container, decimal_pt);
+			return;
 		}
 
-		// For "mlongdiv", skip first 3 non-row children 
-		let first_row = if name(container) == "mlongdiv" { 3 } else { 0 };
+		let first_row = 3;	// `mlongdiv` has 3 leading non-row children (divisor, dividend, result)
 		let old_children = container.children().to_vec();
 
 		// Identify, if present, a row containing a repeating decimal number (for digit splitting)
@@ -4632,9 +4632,6 @@ impl CanonicalizeContext {
 		for (i, child) in old_children.iter().enumerate() {
 			// For skipped (pre-row) children, set decimal attribute on "mn" only
 			if i < first_row {
-				if let ChildOfElement::Element(el) = child && name(*el) == "mn" {
-					el.set_attribute_value("data-decimalpoint", decimal_pt); // mark digit columns
-				}
 				new_children.push(*child);
 				continue;
 			}
@@ -4690,7 +4687,10 @@ impl CanonicalizeContext {
 
 		match name(target) {
 			"msrow" => Self::process_elem_math_msrow(target, row_position, decimal_pt, split_digits),
-			"mscarries" => Self::annotate_mscarries_columns(target, row_position),
+			"mscarries" => {
+				target.set_attribute_value("data-decimalpoint", decimal_pt);
+				Self::annotate_mscarries_columns(target, row_position);
+			},
 			_ => (),
 		}
 		return vec![ChildOfElement::Element(target)]
@@ -4712,9 +4712,9 @@ impl CanonicalizeContext {
 	}
 
 	/// Processes an <msrow> element for mstack handling.
-	/// - Sets "data-decimalpoint" on <msrow> and contained <mn>s.
+	/// - Sets "data-decimalpoint" on <msrow> (not on contained <mn>s).
 	/// - When `split_digits`, sets "data-repeating-decimal" on <msrow> and "data-repeating-decimal-digit" on generated <mn>s.
-	/// - Always marks <mn> with "data-decimalpoint"; also calls `mark_elem_math_mn_speech` which may set additional attributes.
+	/// - Calls `mark_elem_math_mn_speech` on <mn>s which may set additional attributes.
 	/// - For non-longdiv, merges <mn> children and updates text; remaining <mn>s are removed.
 	/// - Sets "data-elem-column" on <mn>s to annotate mstack columns.
 	fn process_elem_math_msrow(msrow: Element, row_position: i32, decimal_pt: &str, split_digits: bool) {
@@ -4731,8 +4731,7 @@ impl CanonicalizeContext {
 				Self::split_elem_math_mn_to_digits(msrow, mn, decimal_pt);
 				return;
 			}
-			mn.set_attribute_value("data-decimalpoint", decimal_pt);
-			Self::mark_elem_math_mn_speech(mn, decimal_pt);
+			Self::mark_elem_math_mn_speech(mn);
 			return;
 		}
 		if mn_elements.len() > 1 && !is_in_longdiv(msrow) {
@@ -4742,7 +4741,7 @@ impl CanonicalizeContext {
 			}
 			let first = mn_elements[0];
 			first.set_text(text.trim());
-			Self::mark_elem_math_mn_speech(first, decimal_pt);
+			Self::mark_elem_math_mn_speech(first);
 			for mn in &mn_elements[1..] {
 				msrow.remove_child(*mn);
 			}
@@ -4750,7 +4749,6 @@ impl CanonicalizeContext {
 		}
 		let n = mn_elements.len() as i32;
 		for (i, mn) in mn_elements.iter().enumerate() {
-			mn.set_attribute_value("data-decimalpoint", decimal_pt);
 			mn.set_attribute_value("data-elem-column", &(row_position + n - 1 - (i as i32)).to_string());
 		}
 
@@ -4769,10 +4767,9 @@ impl CanonicalizeContext {
 	}
 
 	/// Marks a <mn> element for speech processing.
-	/// Sets the "data-decimalpoint" attribute and marks either "data-elem-block-parts" or "data-elem-whole"
-	/// depending on whether the element represents a block-separated partial value.
-	fn mark_elem_math_mn_speech(mn: Element, decimal_pt: &str) {
-		mn.set_attribute_value("data-decimalpoint", decimal_pt);
+	/// Sets either "data-elem-block-parts" or "data-elem-whole" depending on whether the element
+	/// represents a block-separated partial value. Decimal point is on the parent row/container.
+	fn mark_elem_math_mn_speech(mn: Element) {
 		if is_block_separated_partial(mn) {
 			mn.set_attribute_value("data-elem-block-parts", "true");
 		} else {
@@ -4926,7 +4923,7 @@ impl CanonicalizeContext {
 		return is_dot(cells[0]) && is_dot(*cells.last().unwrap())
 	}
 
-	fn split_elem_math_mn_to_digits(msrow: Element, mn: Element, decimal_pt: &str) {
+	fn split_elem_math_mn_to_digits(msrow: Element, mn: Element, _decimal_pt: &str) {
 		let text = as_text(mn);
 		msrow.set_attribute_value("data-repeating-decimal", "true");
 		msrow.remove_child(mn);
@@ -4934,7 +4931,6 @@ impl CanonicalizeContext {
 		for ch in text.chars() {
 			let digit_mn = create_mathml_element(&doc, "mn");
 			digit_mn.set_attribute_value(CHANGED_ATTR, ADDED_ATTR_VALUE);
-			digit_mn.set_attribute_value("data-decimalpoint", decimal_pt);
 			digit_mn.set_attribute_value("data-repeating-decimal-digit", "true");
 			digit_mn.set_text(ch.to_string().as_str());
 			msrow.append_child(digit_mn);
@@ -4963,36 +4959,422 @@ impl CanonicalizeContext {
 		}
 	}
 
-	/// Coalesces consecutive <mn> children into a single <mn> in an mstack container.
-	/// Merges their text, marks the result, and updates relevant attributes for MathML parsing.
-	fn coalesce_consecutive_mstack_mn(container: Element, decimal_pt: &str) {
-		let mut children =container.children();
-		let mut i = 0;
-		while i < children.len() {
-			let child = as_element(children[i]);
-			if name(child) != "mn" {
-				i += 1;
+	/// Build a uniform-width column grid for `<mstack>` (mlongdiv keeps its legacy layout).
+	///
+	/// See [`GridDims`] for the column scheme.
+	///
+	/// After this call:
+	/// - Every direct child of `<mstack>` is `<msrow>`, `<mscarries>`, or `<msline>`.
+	/// - Each `<msrow>` is digit-split: every digit char becomes its own `<mn>` cell.
+	///   Block separators (`,`, U+00A0, U+202F, ` `) are stripped; the decimal mark is kept as its own cell.
+	/// - Padding `<none/>` cells are inserted so every row spans the same column range.
+	/// - Every cell carries `@data-grid-col` (0 = ones column, increasing left, negative for fractional).
+	/// - The `<mstack>` and each row carry `@data-grid-width`.
+	///
+	/// Id assignment for newly-created elements (`data-id-added="true"` is set in each case):
+	/// - A synthetic `<msrow>` wrapping `<mn>…</mn>` inherits the mn's id.
+	/// - Digit cells split from `<mn id="X">…</mn>` get ids `X-1`, `X-2`, …
+	/// - Padding `<none/>` cells get ids `{rowId}-none-{c}` where `c` is the col (negatives use `_2` for -2 etc).
+	fn build_mstack_grid(container: Element, decimal_pt: &str) {
+		let raw_children = container.children().to_vec();
+		let repeat_digit_row = Self::repeating_decimal_number_row_index(container, &raw_children, 0);
+
+		// Phase A: flatten msgroup; wrap bare children in msrow (which inherits the child's id).
+		let mut grid_rows: Vec<Element> = Vec::new();
+		for (i, child) in raw_children.iter().enumerate() {
+			if let ChildOfElement::Element(row) = child {
+				let split_repeating = repeat_digit_row == Some(i);
+				Self::grid_collect_rows(*row, 0, decimal_pt, split_repeating, &mut grid_rows);
+			}
+		}
+
+		// Phase B: digit-split each msrow's `mn` cells; annotate mscarries column data.
+		for &row in &grid_rows {
+			match name(row) {
+				"msrow" => Self::grid_split_msrow_digits(row, decimal_pt),
+				"mscarries" => {
+					row.set_attribute_value("data-decimalpoint", decimal_pt);
+					let pos = Self::elem_math_row_position(row, 0);
+					Self::annotate_mscarries_columns(row, pos);
+				},
+				_ => {}
+			}
+		}
+
+		// Phase C: compute uniform grid dimensions (op col?, int cols, dec col?, frac cols),
+		// then pad every non-skipped row to the same width with decimal-aligned `<none/>` cells.
+		let dims = Self::grid_compute_dims(&grid_rows);
+		let width = dims.total_width();
+
+		for &row in &grid_rows {
+			if name(row) == "msline" { continue; }
+			if row.attribute_value("data-grid-skip").is_none() {
+				Self::grid_assign_columns_and_pad(row, &dims);
+				row.set_attribute_value("data-grid-width", &width.to_string());
+			}
+		}
+
+		container.set_attribute_value("data-grid-width", &width.to_string());
+		let new_children: Vec<ChildOfElement> = grid_rows.iter().copied().map(ChildOfElement::Element).collect();
+		container.replace_children(new_children);
+	}
+
+	/// Flatten `<msgroup>` shifts and wrap bare row-like children in `<msrow>`,
+	/// appending each resulting row in order to `out`.
+	fn grid_collect_rows<'a>(
+		row: Element<'a>,
+		start_position: i32,
+		decimal_pt: &str,
+		split_repeating: bool,
+		out: &mut Vec<Element<'a>>,
+	) {
+		if name(row) == "msgroup" {
+			let shift = row.attribute_value("shift").and_then(|s| s.parse::<i32>().ok()).unwrap_or(0);
+			let group_position = Self::elem_math_row_position(row, start_position);
+			let children: Vec<Element> = row.children().iter().filter_map(|c| {
+				if let ChildOfElement::Element(el) = c { Some(*el) } else { None }
+			}).collect();
+			for (i, child) in children.into_iter().enumerate() {
+				row.remove_child(child);
+				let child_pos = group_position + (i as i32) * shift;
+				let split_rep = if i == 0 { split_repeating } else { false };
+				Self::grid_collect_rows(child, child_pos, decimal_pt, split_rep, out);
+			}
+			return;
+		}
+
+		let row_position = Self::elem_math_row_position(row, start_position);
+		Self::set_data_position(row, row_position);
+
+		let target = match name(row) {
+			"msrow" | "msline" | "mscarries" => row,
+			_ => Self::grid_wrap_bare_in_msrow(row, row_position, decimal_pt),
+		};
+
+		if split_repeating && name(target) == "msrow" {
+			target.set_attribute_value("data-repeating-decimal", "true");
+		}
+
+		out.push(target);
+	}
+
+	/// Wrap a bare (non-row) child in a synthetic `<msrow>`. The new row inherits the bare child's id
+	/// (so digit-split cells later derive ids `X-1`, `X-2`, … from the original `X`).
+	fn grid_wrap_bare_in_msrow<'a>(child: Element<'a>, position: i32, decimal_pt: &str) -> Element<'a> {
+		let doc = child.document();
+		let msrow = create_mathml_element(&doc, "msrow");
+		msrow.set_attribute_value(CHANGED_ATTR, ADDED_ATTR_VALUE);
+		msrow.set_attribute_value("data-decimalpoint", decimal_pt);
+		Self::set_data_position(msrow, position);
+
+		if let Some(id) = child.attribute_value("id") {
+			msrow.set_attribute_value("id", id);
+			msrow.set_attribute_value("data-id-added", "true");
+			child.remove_attribute("id");
+		}
+
+		if let Some(parent) = child.parent() {
+			if let Some(parent_el) = parent.element() {
+				parent_el.remove_child(child);
+			}
+		}
+		msrow.append_child(child);
+		return msrow;
+	}
+
+	/// Replace every `<mn>` child of an `<msrow>` with a sequence of single-character `<mn>` cells.
+	/// Block separators are dropped; the decimal mark survives as its own cell. New cell ids are
+	/// `{base}-1`, `{base}-2`, … where `base` is the source `<mn>`'s id, falling back to the row's id.
+	fn grid_split_msrow_digits(msrow: Element, decimal_pt: &str) {
+		msrow.set_attribute_value("data-decimalpoint", decimal_pt);
+
+		// "No-digit" rows — e.g. the dots row of a repeating-decimal `<mo>.</mo><none/>…<mo>.</mo>` —
+		// carry positional information for other speech rules and must NOT be padded by the grid
+		// (the rules count the row's children to derive `NonRepeatEnd`).
+		let has_any_mn = msrow.children().iter().any(|c| {
+			matches!(c, ChildOfElement::Element(el) if name(*el) == "mn")
+		});
+		if !has_any_mn {
+			msrow.set_attribute_value("data-grid-skip", "true");
+			return;
+		}
+
+		let split_repeating = msrow.attribute_value("data-repeating-decimal").is_some();
+		let row_id = msrow.attribute_value("id").map(|s| s.to_string());
+		let doc = msrow.document();
+
+		let original_children: Vec<Element> = msrow.children().iter().filter_map(|c| {
+			if let ChildOfElement::Element(el) = c { Some(*el) } else { None }
+		}).collect();
+
+		// Determine row-level speech form for source <mn>s: block-separated parts get spaces
+		// (e.g. "24,68" → "24 68"), plain numbers concatenate (e.g. "1,234" → "1234").
+		// Using `mark_elem_math_mn_speech` so this matches the legacy convention for `data-elem-block-parts`.
+		let mut block_parts_speech: Vec<String> = Vec::new();
+		let mut block_parts_speech_used = false;
+
+		for child in &original_children {
+			if name(*child) != "mn" { continue; }
+			Self::mark_elem_math_mn_speech(*child);
+			let trimmed = as_text(*child).trim().to_string();
+			let is_block_parts = child.attribute_value("data-elem-block-parts").is_some();
+			if is_block_parts {
+				block_parts_speech_used = true;
+				let display: String = trimmed.chars().filter_map(|c| match c {
+					',' | '\u{00A0}' | '\u{202F}' => Some(' '),
+					_ => Some(c),
+				}).collect();
+				if !display.is_empty() { block_parts_speech.push(display); }
+			} else {
+				// Plain digits — strip block separators so concatenation matches "1234"-style speech.
+				let plain: String = trimmed.chars().filter(|c| !matches!(c, ',' | '\u{00A0}' | '\u{202F}' | ' ')).collect();
+				if !plain.is_empty() { block_parts_speech.push(plain); }
+			}
+		}
+
+		if block_parts_speech_used {
+			msrow.set_attribute_value("data-elem-block-text", &block_parts_speech.join(" "));
+			msrow.set_attribute_value("data-elem-block-parts", "true");
+		}
+
+		// Replace each <mn> in-place with its per-character split.
+		// Iterate in document order; insert new cells before the source mn, then remove it.
+		for mn in &original_children {
+			if name(*mn) != "mn" { continue; }
+			let text = as_text(*mn);
+			let mn_id = mn.attribute_value("id").map(|s| s.to_string());
+			let base_id = mn_id.clone().or_else(|| row_id.clone());
+
+			let cells = Self::grid_split_digit_chars(&text, decimal_pt);
+			let part_count = cells.len();
+
+			// Build new cells (still detached) before swapping into the msrow at mn's spot.
+			let new_cells: Vec<Element> = cells.iter().enumerate().map(|(idx, ch)| {
+				let cell = create_mathml_element(&doc, "mn");
+				cell.set_attribute_value(CHANGED_ATTR, ADDED_ATTR_VALUE);
+				cell.set_text(ch);
+				if split_repeating {
+					cell.set_attribute_value("data-repeating-decimal-digit", "true");
+				}
+				if let Some(ref base) = base_id {
+					// Single-cell mn that already has its own id keeps that id.
+					let derived = if part_count <= 1 && mn_id.is_some() {
+						base.clone()
+					} else {
+						format!("{}-{}", base, idx + 1)
+					};
+					cell.set_attribute_value("id", &derived);
+					cell.set_attribute_value("data-id-added", "true");
+				}
+				cell
+			}).collect();
+
+			msrow.remove_child(*mn);
+			for cell in &new_cells {
+				msrow.append_child(*cell);
+			}
+		}
+
+		// Re-order so the `<mo>` (if any) sits at its original side and digit cells follow doc order.
+		// We append cells in source order above, which preserves original mn order — `<mo>` ends up
+		// at the same side it was originally because all original mns were already in doc order.
+		// (Operators that appeared before any mn stay first; trailing operators stay last.)
+		// Now reattach operators correctly: collect current children, drop ops, re-insert at proper side.
+		Self::grid_reorder_msrow_operators(msrow, &original_children);
+	}
+
+	/// Restore operator placement after digit-splitting (leading mo stays leading, trailing mo stays trailing).
+	fn grid_reorder_msrow_operators(msrow: Element, originals: &[Element]) {
+		let leading_op = originals.iter().enumerate().find_map(|(i, el)| {
+			if name(*el) == "mo" && originals[..i].iter().all(|e| name(*e) != "mn") { Some(*el) } else { None }
+		});
+		let trailing_op = originals.iter().enumerate().rev().find_map(|(i, el)| {
+			if name(*el) == "mo" && originals[i + 1..].iter().all(|e| name(*e) != "mn") { Some(*el) } else { None }
+		});
+
+		// detach the ops we want to reposition (idempotent if already in place)
+		let mut to_reattach_leading: Option<Element> = None;
+		let mut to_reattach_trailing: Option<Element> = None;
+		for op in [leading_op, trailing_op].iter().flatten() {
+			if op.parent().is_some() {
+				msrow.remove_child(*op);
+			}
+			if leading_op == Some(*op) { to_reattach_leading = Some(*op); }
+			if trailing_op == Some(*op) && leading_op != Some(*op) { to_reattach_trailing = Some(*op); }
+		}
+
+		if let Some(op) = to_reattach_leading {
+			// move op to the front by detaching all current children, prepending op, then re-appending the rest
+			let current: Vec<Element> = msrow.children().iter().filter_map(|c| {
+				if let ChildOfElement::Element(el) = c { Some(*el) } else { None }
+			}).collect();
+			for c in &current { msrow.remove_child(*c); }
+			msrow.append_child(op);
+			for c in &current { msrow.append_child(*c); }
+		}
+		if let Some(op) = to_reattach_trailing {
+			msrow.append_child(op);
+		}
+	}
+
+	/// Split an mn's text into per-character cell strings.
+	/// Digits and the decimal mark each become a cell; block separators are dropped.
+	fn grid_split_digit_chars(text: &str, decimal_pt: &str) -> Vec<String> {
+		let dec_ch = decimal_pt.chars().next().unwrap_or('.');
+		let trimmed = text.trim();
+		let mut out: Vec<String> = Vec::new();
+		for ch in trimmed.chars() {
+			match ch {
+				',' | '\u{00A0}' | '\u{202F}' | ' ' => continue,
+				c if c == dec_ch || c.is_ascii_digit() => out.push(c.to_string()),
+				_ => out.push(ch.to_string()),	// pass through unknown chars (rare)
+			}
+		}
+		return out;
+	}
+
+	/// Per-cell column for non-operator children of a row, before grid padding.
+	/// Decimal-mark `<mn>` cells get column -1; cells before it are positive (integer place values),
+	/// cells after are negative (fractional, starting at -2 = tenths).
+	fn grid_compute_cell_cols(row: Element, cells: &[Element]) -> Vec<i32> {
+		let pos = Self::elem_math_row_position(row, 0);
+		let dec_pt = row.attribute_value("data-decimalpoint").unwrap_or(".");
+		let dec_ch = dec_pt.chars().next().unwrap_or('.');
+
+		let dec_idx = cells.iter().position(|c| {
+			name(*c) == "mn" && as_text(*c).trim().chars().next() == Some(dec_ch) && as_text(*c).trim().chars().count() == 1
+		});
+
+		let mut result: Vec<i32> = Vec::with_capacity(cells.len());
+		match dec_idx {
+			None => {
+				let n = cells.len() as i32;
+				for i in 0..cells.len() {
+					result.push(pos + n - 1 - (i as i32));
+				}
+			}
+			Some(dec_pos) => {
+				let int_count = dec_pos as i32;
+				for i in 0..dec_pos {
+					result.push(pos + int_count - 1 - (i as i32));
+				}
+				result.push(-1);
+				for i in (dec_pos + 1)..cells.len() {
+					result.push(-2 - ((i - dec_pos - 1) as i32));
+				}
+			}
+		}
+		return result;
+	}
+
+	/// Compute uniform grid dimensions across all non-msline, non-skipped rows.
+	///
+	/// The grid layout is (left → right): `[op_col?, int_cols…, dec_col?, frac_cols…]`.
+	/// - `op_col` exists if ANY row has an `<mo>` operator (rows without it get `<none/>`).
+	/// - `int_cols` span `[max_int_col, …, 0]` (right-aligned at ones column).
+	/// - `dec_col` exists if ANY row has a decimal mark (rows without it get `<none/>`).
+	/// - `frac_cols` span `[-2, …, -1 - max_frac]` (left-aligned by decimal).
+	fn grid_compute_dims(rows: &[Element]) -> GridDims {
+		let mut dims = GridDims { any_op: false, max_int_col: -1, any_dec: false, max_frac: 0 };
+
+		for &row in rows {
+			if name(row) == "msline" { continue; }
+			if row.attribute_value("data-grid-skip").is_some() {
 				continue;
 			}
-			let mut j = i + 1;
-			while j < children.len() && name(as_element(children[j])) == "mn" {
-				j += 1;
-			}
-			if j > i + 1 {
-				let mut text = String::new();
-				for &mn_child_of_element in &children[i..j] {
-					text.push_str(as_text(as_element(mn_child_of_element)).trim());
+
+			let has_op = row.children().iter().any(|c| {
+				matches!(c, ChildOfElement::Element(el) if name(*el) == "mo")
+			});
+			if has_op { dims.any_op = true; }
+
+			let non_op_cells: Vec<Element> = row.children().iter().filter_map(|c| {
+				if let ChildOfElement::Element(el) = c {
+					if name(*el) == "mo" { None } else { Some(*el) }
+				} else { None }
+			}).collect();
+			let cell_cols = Self::grid_compute_cell_cols(row, &non_op_cells);
+
+			for col in &cell_cols {
+				if *col >= 0 && *col > dims.max_int_col { dims.max_int_col = *col; }
+				if *col == -1 { dims.any_dec = true; }
+				if *col <= -2 {
+					let frac_pos = -1 - *col;	// col -2 → frac_pos 1, col -3 → 2, …
+					if frac_pos > dims.max_frac { dims.max_frac = frac_pos; }
 				}
-				child.set_text(text.trim());
-				child.set_attribute_value("data-decimalpoint", decimal_pt);
-				Self::mark_elem_math_mn_speech(child, decimal_pt);
-				for mn in &children[(i + 1)..j] {
-					container.remove_child(*mn);
-				}
-				children.drain((i + 1)..j);
 			}
-			i = j;
 		}
+		return dims;
+	}
+
+	/// Rebuild a row's cells so it occupies every column of the global grid, padding with `<none/>`.
+	/// Cells are laid out left-to-right as: `[op?, int cols max→0, dec?, frac cols -2→-1-max_frac]`.
+	fn grid_assign_columns_and_pad(row: Element, dims: &GridDims) {
+		let row_id = row.attribute_value("id").map(|s| s.to_string());
+		let doc = row.document();
+		let in_mscarries = name(row) == "mscarries";
+
+		let original_children: Vec<Element> = row.children().iter().filter_map(|c| {
+			if let ChildOfElement::Element(el) = c { Some(*el) } else { None }
+		}).collect();
+
+		let op_el: Option<Element> = original_children.iter().copied().find(|el| name(*el) == "mo");
+		let non_op_cells: Vec<Element> = original_children.iter().copied().filter(|el| name(*el) != "mo").collect();
+		let cell_cols = Self::grid_compute_cell_cols(row, &non_op_cells);
+		let mut col_to_cell: std::collections::HashMap<i32, Element> = std::collections::HashMap::new();
+		for (cell, col) in non_op_cells.iter().zip(cell_cols.iter()) {
+			col_to_cell.insert(*col, *cell);
+		}
+
+		// Helper: get or create the cell at this col.
+		let mut take_or_pad = |col: i32| -> Element {
+			if let Some(existing) = col_to_cell.remove(&col) { return existing; }
+			let none = create_mathml_element(&doc, "none");
+			none.set_attribute_value(CHANGED_ATTR, ADDED_ATTR_VALUE);
+			if let Some(ref id) = row_id {
+				let col_str = if col < 0 { format!("_{}", -col) } else { col.to_string() };
+				let derived = format!("{}-none-{}", id, col_str);
+				none.set_attribute_value("id", &derived);
+				none.set_attribute_value("data-id-added", "true");
+			}
+			return none;
+		};
+
+		// Build the grid row in column order (leftmost first).
+		let op_col = dims.max_int_col + 1;	// virtual col index for the operator cell
+		let mut new_cells: Vec<(i32, Element)> = Vec::new();
+
+		if dims.any_op {
+			match op_el {
+				Some(op) => new_cells.push((op_col, op)),
+				None => new_cells.push((op_col, take_or_pad(op_col))),
+			}
+		}
+		for col in (0..=dims.max_int_col).rev() {
+			new_cells.push((col, take_or_pad(col)));
+		}
+		if dims.any_dec {
+			new_cells.push((-1, take_or_pad(-1)));
+		}
+		for frac_pos in 1..=dims.max_frac {
+			let col = -1 - frac_pos;
+			new_cells.push((col, take_or_pad(col)));
+		}
+
+		// Annotate each cell with `data-grid-col` (and legacy attrs used by speech rules).
+		for (col, cell) in &new_cells {
+			cell.set_attribute_value("data-grid-col", &col.to_string());
+			if name(*cell) == "mn" {
+				cell.set_attribute_value("data-elem-column", &col.to_string());
+			}
+			if in_mscarries && matches!(name(*cell), "mn" | "mscarry" | "none") {
+				cell.set_attribute_value("data-elem-carry-column", &col.to_string());
+			}
+		}
+
+		// Rebuild row child order.
+		for child in &original_children { row.remove_child(*child); }
+		for (_, cell) in &new_cells { row.append_child(*cell); }
 	}
 
 	fn detect_stack_operator(container: Element) -> Option<char> {
@@ -5017,6 +5399,25 @@ impl CanonicalizeContext {
 			}
 		}
 		return None
+	}
+}
+
+/// Dimensions of the uniform mstack column grid produced by [`CanonicalizeContext::build_mstack_grid`].
+///
+/// Column layout (left → right):
+/// `[op? @ max_int_col+1, int_cols max_int_col..0, dec? @ -1, frac_cols -2..-1-max_frac]`.
+#[derive(Clone, Copy, Debug)]
+struct GridDims {
+	any_op: bool,
+	max_int_col: i32,	// leftmost integer column; -1 if no integer cells exist anywhere
+	any_dec: bool,
+	max_frac: i32,		// number of fractional columns (0 if no decimals)
+}
+
+impl GridDims {
+	fn total_width(&self) -> i32 {
+		let int_cols = if self.max_int_col >= 0 { self.max_int_col + 1 } else { 0 };
+		(if self.any_op { 1 } else { 0 }) + int_cols + (if self.any_dec { 1 } else { 0 }) + self.max_frac
 	}
 }
 

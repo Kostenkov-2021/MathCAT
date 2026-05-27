@@ -83,35 +83,32 @@
 - name: mstack-default
   tag: mstack
   match: "."
-  variables:
-  - Operator: "@data-operator"
-  - StackAlign: "@stackalign"
   replace:
   - bookmark: "@id"
   - test:
-    - if: "$StackAlign='center'"
+    - if: "@stackalign='center'"
       then: [t: "centered"]
-    - else_if: "$StackAlign='left'"
+    - else_if: "@stackalign='left'"
       then: [t: "left-aligned"]
   - test:
-    - if: "$Operator='+'"
+    - if: "@data-operator='+'"
       then:
       - t: "addition problem"
-      - t: ";"
-    - else_if: "$Operator='-' or $Operator='−'"
+      - pause: long
+    - else_if: "@data-operator='-' or @data-operator='−'"
       then:
       - t: "subtraction problem"
-      - t: ";"
-    - else_if: "$Operator='×'"
+      - pause: long
+    - else_if: "@data-operator='×'"
       then:
       - t: "multiplication problem"
-      - t: ";"
+      - pause: long
       else: [t: "rows of numbers"]
   - x: "*"
   - pause: 500
   - bookmark: "@id"
   - test:
-      if: "$Operator=' ' or not($Operator)"
+      if: "@data-operator=' ' or not(@data-operator)"
       then: [t: "end of numbers"]
       else: [t: "end of problem"]
   - pause: 200
@@ -175,11 +172,12 @@
 
 - name: elem-math-mn-decimal
   tag: mn
-  match: "@data-decimalpoint and contains(., @data-decimalpoint) and string-length(.) - string-length(translate(., @data-decimalpoint, '')) = 1 and 
-          (@data-decimalpoint != $DecimalSeparators or @data-decimalpoint = ',') and
+  match: "$DecPt!='' and contains(., $DecPt) and string-length(.) - string-length(translate(., $DecPt, '')) = 1 and 
+          ($DecPt != $DecimalSeparators or $DecPt = ',') and
           ((parent::*[self::m:mlongdiv] and count(preceding-sibling::*) < 3) or @data-elem-whole='true')"
   variables:
-  - DecSep: "@data-decimalpoint"
+  - DecPt: "IfThenElse(parent::m:msrow/@data-decimalpoint, parent::m:msrow/@data-decimalpoint, IfThenElse(parent::m:mscarries/@data-decimalpoint, parent::m:mscarries/@data-decimalpoint, IfThenElse(ancestor::m:mstack/@data-decimalpoint, ancestor::m:mstack/@data-decimalpoint, ancestor::m:mlongdiv/@data-decimalpoint)))"
+  - DecSep: "$DecPt"
   replace:
   - bookmark: "@id"
   - x: "concat(translate(translate(substring-before(., $DecSep), ',', ' '), '\u00A0\u202F', ' '), $DecimalSeparators, translate(translate(substring-after(., $DecSep), ',', ' '), '\u00A0\u202F', ' '))"
@@ -201,12 +199,14 @@
 - name: elem-math-repeating-decimal-mn
   tag: mn
   match: "@data-repeating-decimal-digit='true'"
+  variables:
+  - DecPt: "IfThenElse(parent::m:msrow/@data-decimalpoint, parent::m:msrow/@data-decimalpoint, IfThenElse(ancestor::m:mstack/@data-decimalpoint, ancestor::m:mstack/@data-decimalpoint, '.'))"
   replace:
   - bookmark: "@id"
   - test:
-    - if: ".='.' and @data-decimalpoint='.'"
+    - if: ".='.' and $DecPt='.'"
       then: [t: "point"]
-    - else_if: ".=',' and @data-decimalpoint=','"
+    - else_if: ".=',' and $DecPt=','"
       then: [t: "comma"]
     - else_if: ".=' '"
       then: [t: "space"]
@@ -233,6 +233,7 @@
       - t: "in the"
       - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
       - t: "column"
+      # FIX: this looks like an AI-generated mess
       - test:
         - if: "following-sibling::*[self::m:mn] and ../following-sibling::*[1][self::m:mscarries]"
           then: [pause: 200]
@@ -334,135 +335,43 @@
 
 # --- msrow / msline (general) ---
 
-- name: msrow-stack-trailing-operator
-  tag: msrow
-  match:
-  - "ancestor::m:mstack and not(ancestor::m:mlongdiv) and"
-  - "following-sibling::*[self::m:msline] and"
-  - "not(preceding-sibling::*[self::m:msline]) and"
-  - "not(*[self::m:none]) and not(*[self::m:mo][.='×']) and"
-  - "*[last()][self::m:mo] and (preceding-sibling::*[self::m:mn] or preceding-sibling::*[self::m:msrow])"
-  replace:
-  - x: "*[last()][self::m:mo]"
-  - x: "./*[self::m:mn]"
-
-- name: msrow-stack-leading-operator
-  tag: msrow
-  match:
-  - "ancestor::m:mstack and not(ancestor::m:mlongdiv) and"
-  - "following-sibling::*[self::m:msline] and"
-  - "not(preceding-sibling::*[self::m:msline]) and"
-  - "not(*[self::m:none]) and not(*[self::m:mo][.='×']) and"
-  - "*[1][self::m:mo] and (preceding-sibling::*[self::m:mn] or preceding-sibling::*[self::m:msrow])"
-  replace:
-  - x: "*[self::m:mo]"
-  - x: "./*[self::m:mn]"
-
 - name: msrow-stack-before-msline
   tag: msrow
   match:
-  - "ancestor::m:mstack and not(ancestor::m:mlongdiv) and"
-  - "following-sibling::*[self::m:msline] and"
-  - "not(preceding-sibling::*[self::m:msline]) and"
-  - "not(*[self::m:none]) and not(*[self::m:mo][.='×'])"
-  replace:
-  - x: "./*[self::m:mn]"
-  - test:
-      if: "*[self::m:mo] and following-sibling::*[self::m:msrow]"
-      then: [x: "*[self::m:mo]"]
-
-- name: msrow-operator-on-right
-  tag: msrow
-  match: "count(*) > 1 and *[last()][self::m:mo]"
-  replace:
-  - x: "*[last()]"
-  - x: "*[position()!=last()]"
-
-- name: msrow-default-zero-shift
-  tag: msrow
-  match:
-  - "number(IfThenElse(@data-position, @data-position, IfThenElse(@position, @position, 0)))=0"
-  variables:
-  - AfterMsline: "preceding-sibling::*[self::m:msline] or (preceding-sibling::*[self::m:msrow] and preceding-sibling::*[self::m:msrow]/preceding-sibling::*[self::m:msline])"
-  - BetweenMslines: "preceding-sibling::*[self::m:msline] and following-sibling::*[self::m:msline]"
-  - RowPos: "number(IfThenElse(@data-position, @data-position, IfThenElse(@position, @position, 0)))"
-  - IsLastPartialRow: "following-sibling::*[1][self::m:msline]"
-  - FollowingIsLastPartial: "following-sibling::*[1][self::m:msrow or self::m:mn][following-sibling::*[1][self::m:msline]]"
-  - FollowingRowPos: "number(IfThenElse(following-sibling::*[1]/@data-position, following-sibling::*[1]/@data-position, IfThenElse(following-sibling::*[1]/@position, following-sibling::*[1]/@position, 0)))"
-  - ShiftAmount: "IfThenElse($IsLastPartialRow, 0, IfThenElse($FollowingIsLastPartial, $FollowingRowPos, $RowPos + 1))"
-  replace:
-  - test:
-    - if: "$BetweenMslines and $IsLastPartialRow"
-      then:
-      - x: "*"
-      - t: ";"
-    - else_if: "$BetweenMslines"
-      then:
-      - x: "*"
-      - t: ","
-      - t: "shifted to the left"
-      - x: "$ShiftAmount"
-      - test:
-          if: "$ShiftAmount=1"
-          then: [t: "digit"]
-          else: [t: "digits"]
-      - test:
-        - if: "following-sibling::*[self::m:msrow or self::m:mn][following-sibling::*[self::m:msrow or self::m:mn]] or ./*[@data-elem-block-parts='true']"
-          then: [t: ";"]
-    - else_if: "$AfterMsline"
-      then:
-      - x: "*"
-      - t: ";"
-    - else: [x: "*"]
-
-- name: msrow-default-shifted
-  tag: msrow
-  match:
-  - "not(parent::*[self::m:mlongdiv]) and"
-  - "number(IfThenElse(@data-position, @data-position, IfThenElse(@position, @position, 0)))!=0"
+  - "ancestor::m:mstack and not(ancestor::m:mlongdiv)"
   variables:
   - RowPos: "number(IfThenElse(@data-position, @data-position, IfThenElse(@position, @position, 0)))"
-  - AfterMsline: "preceding-sibling::*[self::m:msline] or (preceding-sibling::*[self::m:msrow] and preceding-sibling::*[self::m:msrow]/preceding-sibling::*[self::m:msline])"
-  - BetweenMslines: "preceding-sibling::*[self::m:msline] and following-sibling::*[self::m:msline]"
-  - IsLastPartialRow: "following-sibling::*[1][self::m:msline]"
-  - FollowingIsLastPartial: "following-sibling::*[1][self::m:msrow or self::m:mn][following-sibling::*[1][self::m:msline]]"
-  - FollowingRowPos: "number(IfThenElse(following-sibling::*[1]/@data-position, following-sibling::*[1]/@data-position, IfThenElse(following-sibling::*[1]/@position, following-sibling::*[1]/@position, 0)))"
-  - ShiftAmount: "IfThenElse($IsLastPartialRow, 0, IfThenElse($FollowingIsLastPartial, $FollowingRowPos, $RowPos + 1))"
+  - Operator: "ancestor::m:mstack/@data-operator"
   replace:
   - test:
-    - if: "$BetweenMslines and $IsLastPartialRow"
+    - if: "$RowPos != 0"
       then:
-      - x: "*"
-      - t: ";"
-    - else_if: "$BetweenMslines"
-      then:
-      - x: "*"
-      - t: ","
-      - t: "shifted to the left"
-      - x: "$ShiftAmount"
+      - pause: medium
       - test:
-          if: "$ShiftAmount=1"
-          then: [t: "digit"]
-          else: [t: "digits"]
-      - test:
-        - if: "following-sibling::*[self::m:msrow or self::m:mn][following-sibling::*[self::m:msrow or self::m:mn]] or ./*[@data-elem-block-parts='true']"
-          then: [t: ";"]
-    - else_if: "$AfterMsline"
-      then:
-      - x: "*"
-      - t: ";"
-    - else:
-      - pause: 500
-      - t: "shifted to the left"
-      - x: "$RowPos"
-      - test:
-          if: "$RowPos=1"
+          if: "$RowPos > 0"
           then:
-          - t: "digit"
-          - t: ","
+          - t: "shifted to the left"
+          - x: "$RowPos"
+          else:
+          - t: "shifted to the right"
+          - x: "-$RowPos"
+      - test:
+          if: "$RowPos=1 or $RowPos=-1"
+          then: [t: "digit"]
           else: [t: "digits"]
-      - x: "*"
-      - t: ";"
+      - pause: short
+  - x: "ElemMathRowDigits(.)"
+  - test:
+      # speak the operator if before the the first msline, but not after it or directly before it (1+2+3 equals ...)
+      # if it is a multiplication problem, then the second chunk will be addition, but it won't be marked as such
+      if: "$Operator and following-sibling::*[following-sibling::m:msline] and not(following-sibling::*[1][self::m:msline])"
+      then:
+      - pause: short
+      - test:
+          if: "preceding-sibling::*[self::m:msline]"
+          then: [x: "'+'"]   # second chunk of multiplication problem
+          else: [x: "$Operator"]
+      - pause: short
 
 - name: msline-default-zero
   tag: msline
@@ -470,13 +379,13 @@
   replace:
   - test:
     - if: "not(following-sibling::*) and preceding-sibling::*[1][self::m:msrow][*[self::m:none]]"
-      then: [t: ";"]
+      then: [pause: long]
     - else: [pause: 200]
   - t: "equals"
   - test:
       if: "following-sibling::*[1][self::m:mscarries]"
       then: [pause: 200]
-      else: [t: ";"]
+      else: [pause: long]
 
 - name: msline-default-shifted
   tag: msline
@@ -541,8 +450,8 @@
 - name: none-in-mscarries
   tag: none
   match:
-  - "parent::*[self::m:mscarries] and count(following-sibling::*) > 0 and"
-  - "(../@crossout and ../@crossout!='none') or count(preceding-sibling::*)=0"
+  - "parent::*[self::m:mscarries] and not(@data-changed='added') and count(following-sibling::*) > 0 and"
+  - "(../@crossout and ../@crossout!='none') or (not(@data-changed='added') and count(preceding-sibling::*[not(@data-changed='added')])=0)"
   variables:
   - Column: "number(@data-elem-carry-column)"
   replace:
@@ -647,23 +556,24 @@
   - Operator: "ancestor::m:mstack/@data-operator"
   replace:
   - x: "*"
+  # FIX: this is an AI-generated mess
   - test:
     - if: "following-sibling::*[1][self::m:mscarries] and ($Operator='-' or $Operator='−')"
-      then: [t: ";"]
+      then: [pause: long]
     - else_if: "following-sibling::*[1][self::m:mscarries] and $Operator='×'"
       then:
       - t: "next row"
-      - t: ";"
+      - pause: long
     - else_if: "@data-elem-carry-terminator='mscarry'"
       then: [pause: 200]
     - else_if: "@data-elem-carry-terminator='none' and ($Operator='-' or $Operator='−' or $Operator='+')"
-      then: [t: ";"]
+      then: [pause: long]
     - else_if: "($Operator='-' or $Operator='−') and not(following-sibling::*[1][self::m:mscarries])"
       then: [pause: 200]
     - else_if: "$Operator='×' and not(following-sibling::*[1][self::m:mscarries]) and (following-sibling::*[self::m:mn] or following-sibling::*[self::m:msrow])"
       then: [pause: 200]
     - else_if: "$Operator='×' and not(following-sibling::*[1][self::m:mscarries]) and not(following-sibling::*[self::m:mn] or following-sibling::*[self::m:msrow])"
-      then: [t: ";"]
+      then: [pause: long]
     - else: [pause: 200]
 
 # --- per-digit mn in multi-column msrow ---
@@ -673,10 +583,11 @@
   match: "parent::m:msrow and (ancestor::m:mstack or ancestor::m:mlongdiv) and @data-elem-column and not(@data-elem-whole='true')"
   variables:
   - Column: "number(@data-elem-column)"
-  - DecimalPoint: "@data-decimalpoint"
+  - DecimalPoint: "parent::m:msrow/@data-decimalpoint"
   - InLongdiv: "ancestor::m:mlongdiv"
   replace:
   - bookmark: "@id"
+  # FIX: this seems like an AI-generated mess
   - test:
     - if: ".=',' and $DecimalPoint!=','"
       then: [t: "comma"]
@@ -687,21 +598,18 @@
     - else_if: ".!='.' or $DecimalPoint='.'"
       then: [x: "translate(., $BlockSeparators, '')"]
   - test:
-    - if: "not($InLongdiv)"
-      then: []
-    - else:
-      - pause: 100
-  - test:
-    - if: "not($InLongdiv)"
-      then: []
-    - else_if: "$Column=-1"
-      then: [t: "decimal point"]
-    - else_if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
-      then:
-      - t: "in the"
-      - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
-      - t: "column"
-    - else:
-      - t: "in the ten to the"
-      - x: "$Column"
-      - t: "column"
+      - if: "$InLongdiv"
+        then:
+        - pause: short
+        - test:
+          - if: "$Column=-1"
+            then: [t: "decimal point"]
+          - else_if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
+            then:
+            - t: "in the"
+            - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+            - t: "column"
+          - else:
+            - t: "in the ten to the"
+            - x: "$Column"
+            - t: "column"

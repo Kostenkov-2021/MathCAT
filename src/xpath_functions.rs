@@ -1081,6 +1081,53 @@ impl DefinitionValue {
     }
 }
 
+pub struct ElemMathRowDigits;
+impl ElemMathRowDigits {
+    /// Walk the digit/decimal cells of an `<msrow>` (or compatible row) and concatenate them
+    /// into a single string suitable for one speech token, e.g. "424", ".98", "1.23".
+    ///
+    /// `<mo>` cells (operators) are skipped; padding `<none/>` cells are skipped.
+    /// When the row carries `@data-elem-block-text` (set by the grid builder for block-separated
+    /// source numbers like "24,68"), that pre-formatted text is returned verbatim — this preserves
+    /// the "24 68" partial-product speech without inserting a comma cell into the grid.
+    fn row_digits(row: Element) -> String {
+        if let Some(block) = row.attribute_value("data-elem-block-text") {
+            return block.to_string();
+        }
+        let mut out = String::new();
+        for child in row.children() {
+            let ChildOfElement::Element(el) = child else { continue; };
+            match name(el) {
+                "mn" => out.push_str(get_text_from_element(el).trim()),
+                _ => continue,	// skip <mo>, <none/>, etc.
+            }
+        }
+        return out;
+    }
+}
+
+/// `ElemMathRowDigits(node)` — returns a single string of the row's digit cells (used in elementary-math
+/// stack speech to emit "424" rather than "4 2 4" after the grid splits digits into individual cells).
+impl Function for ElemMathRowDigits {
+    fn evaluate<'d>(&self,
+                        _context: &context::Evaluation<'_, 'd>,
+                        args: Vec<Value<'d>>)
+                        -> Result<Value<'d>, Error>
+    {
+        let mut args = Args(args);
+        args.exactly(1)?;
+        let nodes = args.pop_nodeset()?;
+        if nodes.size() == 0 {
+            return Ok(Value::String(String::new()));
+        }
+        let node = validate_one_node(nodes, "ElemMathRowDigits")?;
+        if let Node::Element(e) = node {
+            return Ok(Value::String(ElemMathRowDigits::row_digits(e)));
+        }
+        return Err(Error::Other(format!("ElemMathRowDigits: arg '{node:?}' is not an element")));
+    }
+}
+
 pub struct DistanceFromLeaf;
 impl DistanceFromLeaf {
     fn distance(element: Element, use_left_side: bool, treat_2d_elements_as_tokens: bool) -> usize {
@@ -1422,6 +1469,7 @@ pub fn add_builtin_functions(context: &mut Context) {
     context.set_function("IfThenElse", IfThenElse);
     context.set_function("IFTHENELSE", IfThenElse);
     context.set_function("DistanceFromLeaf", DistanceFromLeaf);
+    context.set_function("ElemMathRowDigits", ElemMathRowDigits);
     context.set_function("EdgeNode", EdgeNode);
     context.set_function("SpeakIntentName", SpeakIntentName);
     context.set_function("GetBracketingIntentName", GetBracketingIntentName);

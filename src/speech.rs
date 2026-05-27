@@ -27,6 +27,7 @@ use std::rc::Rc;
 use crate::shim_filesystem::{read_to_string_shim, canonicalize_shim};
 use crate::canonicalize::{as_element, create_mathml_element, set_mathml_name, name, MATHML_FROM_NAME_ATTR};
 use regex::Regex;
+#[allow(unused_imports)]
 use log::{debug, error, info};
 
 
@@ -148,6 +149,7 @@ fn speak_rules(rules: &'static std::thread::LocalKey<RefCell<SpeechRules>>, math
                     .context("Pattern match/replacement failure!")?;
         // Note: [[...]] is added around a matching child, but if the "id" is on 'mathml', the whole string is used
         if !rules_with_context.nav_node_id.is_empty() {
+            // debug!("nav_node_id: {}, speech_string: {}", rules_with_context.nav_node_id, speech_string);
             // See https://github.com/NSoiffer/MathCAT/issues/174 for why we can just start the speech at the nav node
             let intent_attr = mathml.attribute_value("data-intent-property").unwrap_or_default();
             if let Some(start) = speech_string.find("[[") {
@@ -2521,7 +2523,7 @@ impl<'c, 's:'c, 'r, 'm:'c> SpeechRulesWithContext<'c, 's,'m> {
                         if self.nav_node_id.is_empty() {
                             Ok( Some(s) )
                         } else {
-                            if self.nav_node_id == mathml.attribute_value("id").unwrap_or_default() {debug!("Matched pattern name/tag: {}/{}", pattern.pattern_name, pattern.tag_name)};
+                            // if self.nav_node_id == mathml.attribute_value("id").unwrap_or_default() {debug!("Matched pattern name/tag: {}/{}", pattern.pattern_name, pattern.tag_name)};
                             Ok ( Some(self.nav_node_adjust(s, mathml)) )
                         }
                     },
@@ -2563,15 +2565,15 @@ impl<'c, 's:'c, 'r, 'm:'c> SpeechRulesWithContext<'c, 's,'m> {
       if let Some(id) = mathml.attribute_value("id") &&
          self.nav_node_id == id {
         let offset = mathml.attribute_value(crate::navigate::ID_OFFSET).unwrap_or("0");
-        debug!("nav_node_adjust: id/name='{}/{}' offset?='{}'", id, name(mathml),
-               self.nav_node_offset.to_string().as_str() == offset
-        );
+        // debug!("nav_node_adjust: id/name='{}/{}' offset?='{}'", id, name(mathml),
+        //        self.nav_node_offset.to_string().as_str() == offset
+        // );
         if is_leaf(mathml) || self.nav_node_offset.to_string().as_str() == offset {
           if self.speech_rules.name == RulesFor::Braille {
             let highlight_style =  self.speech_rules.pref_manager.borrow().pref_to_string("BrailleNavHighlight");
             return T::highlight_braille(speech, highlight_style);
           } else {
-            debug!("nav_node_adjust: id='{}' offset='{}/{}'", id, self.nav_node_offset, offset);
+            // debug!("nav_node_adjust: id='{}' offset='{}/{}'", id, self.nav_node_offset, offset);
             return T::mark_nav_speech(speech)
           }
         }
@@ -2643,7 +2645,7 @@ impl<'c, 's:'c, 'r, 'm:'c> SpeechRulesWithContext<'c, 's,'m> {
     fn mark_nav_speech(speech: String) -> String {
         // add unique markers (since speech is mostly ascii letters and digits, most any symbol will do)
         // it's a bug (but happened during intent generation), we might have identical id's, choose innermost one
-        debug!("mark_nav_speech: adding [[ {} ]] ", &speech);
+        // debug!("mark_nav_speech: adding [[ {} ]] ", &speech);
         if !speech.contains("[[") {
             return "[[".to_string() + &speech + "]]";
         } else {

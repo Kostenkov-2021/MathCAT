@@ -249,16 +249,22 @@
   tag: "*"
   match: "($NavCommand = 'ZoomIn' or $NavCommand = 'ZoomInAll') and IsNode(., 'leaf')"
   replace:
-  - with:
-      variables: [SayCommand: "string($NavVerbosity != 'Terse')"]
-      replace: [x: "."]
   - test:
-      if: "$ReadZoomLevel !=-1"
+      # if we hit an empty cell (typically elementary math), move right looking for something real
+      if: "(self::m:none or (self::m:mrow and count(*)=0)) and following-sibling::*"
       then:
-      - set_variables: [ReadZoomLevel: "0"]
-  - set_variables:
-      - NavNode: "@id"
-      - NavNodeOffset: "IfThenElse(string-length(.) > 1 and $MatchCounter = 1 and $NavNodeOffset = 0, '1', '0')"
+      - x: "following-sibling::*[1]"
+      else:
+      - with:
+          variables: [SayCommand: "string($NavVerbosity != 'Terse')"]
+          replace: [x: "."]
+      - test:
+          if: "$ReadZoomLevel !=-1"
+          then:
+          - set_variables: [ReadZoomLevel: "0"]
+      - set_variables:
+          - NavNode: "@id"
+          - NavNodeOffset: "IfThenElse(string-length(.) > 1 and $MatchCounter = 1 and $NavNodeOffset = 0, '1', '0')"
 
 # special case of zooming into a table -- move to the first row (if only one row, first column)
 - name: zoom-in-table
@@ -825,7 +831,7 @@
       - set_variables: [SpeakExpression: "'false'"]
 
 - name: move-cell-up
-  tag: [mtr, mlabeledtr]
+  tag: [mtr, mlabeledtr, msrow]
   match: "$NavCommand='MoveCellUp'"
   replace:
   - test:
@@ -849,7 +855,7 @@
       - set_variables: [SpeakExpression: "'false'"]
 
 - name: move-cell-down
-  tag: [mtr, mlabeledtr]
+  tag: [mtr, mlabeledtr, msrow]
   match: "$NavCommand='MoveCellDown'"
   replace:
   - test:
@@ -874,7 +880,7 @@
 
 - name: move-cell-previous
   # if a row is selected, there is no previous/next column, so this is trivial
-  tag: [mtr, mlabeledtr]
+  tag: [mtr, mlabeledtr, msrow]
   match: "$NavCommand='MoveCellPrevious'"
   replace:
   - test:
@@ -887,7 +893,7 @@
 
 - name: move-cell-next
   # if a row is selected, there is no previous/next column, so this is trivial
-  tag: [mtr, mlabeledtr]
+  tag: [mtr, mlabeledtr, msrow]
   match: "$NavCommand='MoveCellNext'"
   replace:
   - test:
@@ -953,28 +959,9 @@
           - pause: long
           - set_variables: [SpeakExpression: "'false'"]
 
-# mtd ? ( $NavCommand='MoveColumnStart' )
-# => MoveColStart {
-#       ruleRef = name(^^match);
-#       column = index(match);
-#       ::StartPosition = ^^match[0][index(match)][0].dfs;
-#       ::EndPosition = ^^match[0][index(match)][0].offset;
-#   };
-
-# mtd ? ( $NavCommand='MoveColumnEnd' )
-# => MoveColEnd {
-#       ruleRef = name(^^match);
-#       column = index(match);
-#       ::StartPosition = ^^match[count(^^match)-1][index(match)][0].dfs;
-#       ::EndPosition = ^^match[count(^^match)-1][index(match)][0].offset;
-#   };
-
-
 
 # Rules for columnar math (mstack and mlongdiv) -- converted from MathPlayer TDL
-# Deferred: uneven digit counts, operators on right, msline rows, mlongdiv prefix children, MoveColumnStart/End
 
-# Coalesced multi-digit mn in msrow: horizontal cell moves use NavNodeOffset (canonicalize merges <mn>1</mn><mn>2</mn><mn>8</mn> into one mn)
 - name: elem-math-msrow-whole-mn-cell-next
   tag: mn
   match:
@@ -1041,12 +1028,27 @@
           then:
           - t: "move left"                        # phrase('move left')
           - pause: short
-      - test:
-          if: "preceding-sibling::*[1][self::m:none]"
-          then:
-          - set_variables: [NavNode: "preceding-sibling::*[1]/@id", NavNodeOffset: "0", SpeakExpression: "'false'"]
-          else:
-          - set_variables: [NavNode: "preceding-sibling::*[1]/@id", NavNodeOffset: "0"]
+      - with:
+          variables: [Target: "preceding-sibling::*[1]"]
+          replace:
+          - test:
+              if: "$Target[self::m:none] or $Target[self::m:mrow and not(*)]"
+              then:
+              - with:
+                  variables: [TargetCol: "number($Target/@data-grid-col)"]
+                  replace:
+                  - test:
+                      if: "$Target/@data-grid-col and DefinitionValue(string($TargetCol), 'Speech', 'ElemMathPlace') != ''"
+                      then:
+                      - t: "nothing in the"                                           # phrase('nothing in the' tens column)
+                      - x: "DefinitionValue(string($TargetCol), 'Speech', 'ElemMathPlace')"
+                      - t: "column"                                                   # phrase(nothing in the tens 'column')
+                      else:
+                      - t: "nothing in column"                                        # phrase('nothing in column' 4)
+                      - x: "count($Target/preceding-sibling::*)+1"
+              - set_variables: [NavNode: "$Target/@id", NavNodeOffset: "0", SpeakExpression: "'false'"]
+              else:
+              - set_variables: [NavNode: "$Target/@id", NavNodeOffset: "0"]
       else:
       - t: "no previous column"                 # phrase('no previous column' in the stack)
       - set_variables: [SpeakExpression: "'false'"]

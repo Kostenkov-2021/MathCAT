@@ -4,14 +4,14 @@ use anyhow::Result;
 #[test]
 fn addition_operator_left() -> Result<()> {
     let expr = "<math><mstack><mn>424</mn><msrow><mo>+</mo><none/><mn>33</mn></msrow><msline/></mstack></math>";
-    test("en", "ClearSpeak", expr, "addition problem; 424 plus 33; equals; end of problem")?;
+    test("en", "ClearSpeak", expr, "addition problem; 424, plus, 33; equals; end of problem")?;
     return Ok(());
 }
 
 #[test]
 fn addition_operator_right() -> Result<()> {
     let expr = "<math><mstack><mn>123</mn><msrow><mn>456</mn><mo>+</mo></msrow><msline/><mn>579</mn></mstack></math>";
-    test("en", "ClearSpeak", expr, "addition problem; 123 plus 456, equals; 579; end of problem")?;
+    test("en", "ClearSpeak", expr, "addition problem; 123, plus, 456, equals; 579; end of problem")?;
     return Ok(());
 }
 
@@ -30,7 +30,7 @@ fn subtraction_borrow_above() -> Result<()> {
         "ClearSpeak",
         expr,
         r#"subtraction problem; crossout and carry 2 in the hundreds column, crossout and carry 12 in the tens column;
-                 2327 minus 1156, equals; 1171; end of problem"#,
+                 2327, minus, 1156, equals; 1171; end of problem"#,
     )?;
     return Ok(());
 }
@@ -49,7 +49,7 @@ fn subtraction_borrow_aboveleft() -> Result<()> {
         "ClearSpeak",
         expr,
         r#"subtraction problem; crossout in the thousands column, crossout and carry 2 in the hundreds column, 
-         carry 1, in the tens column; 2327 minus 1156, equals; 1171; 
+         carry 1, in the tens column; 2327, minus, 1156, equals; 1171; 
          end of problem"#,
     )?;
     return Ok(());
@@ -69,7 +69,7 @@ fn subtraction_borrow_swedish() -> Result<()> {
         "ClearSpeak",
         expr,
         r#"subtraction problem; crossout in the tens column, carry 10 in the ones column, 
-                52 minus 7, equals; 45; end of problem"#,
+                52, minus, 7, equals; 45; end of problem"#,
     )?;
     return Ok(());
 }
@@ -92,8 +92,10 @@ fn multiplication_simple() -> Result<()> {
         "en",
         "ClearSpeak",
         expr,
-        r#"multiplication problem; 123 times 321, equals; 123, shifted to the left 1 digit; 246, shifted to the left 2 digits 
-                369; equals; end of problem"#,
+        r#"multiplication problem; 123, times, 321, equals;
+                                            123, plus;
+                                            shifted to the left 1 digit, 246, plus;
+                                            shifted to the left 2 digits, 369; equals; end of problem"#,
     )?;
     return Ok(());
 }
@@ -123,16 +125,15 @@ fn multiplication_carries() -> Result<()> {
         r#"multiplication problem; carry 1 in the hundreds column, carry 1 in the tens column,
          next row;
          carry 1 in the hundreds column, carry 1 in the tens column;
-         1234 times 4321, equals,
+         1234, times, 4321, equals,
          carry 1 in the hundred millions column, carry 1 in the millions column, carry 1 in the hundred thousands column,
          carry 1 in the ten thousands column, 
          carry 1 in the hundreds column;
-         1234, shifted to the left 1 digit;
-         24 68, shifted to the left 2 digits;
-         370 2, shifted to the left 4 digits;
-         4 936;
-         equals; 5332114; end of 
-         problem"#,
+         1234,
+         plus; shifted to the left 1 digit, 24 68,
+         plus; shifted to the left 2 digits, 370 2,
+         plus; shifted to the left 4 digits, 4 936,
+         equals; 5332114; end of problem"#,
     )?;
     return Ok(());
 }
@@ -277,9 +278,15 @@ fn longdiv_stackedrightright() -> Result<()> {
 
 #[test]
 fn addition_mn_rows() -> Result<()> {
-    let expr = r#"<math><mstack><mn>123</mn><mn>98</mn><msrow><mo>+</mo><mn>456</mn></msrow><msline></msline><mn>677</mn></mstack></math>"#;
+    let expr = r#"<math><mstack>
+                            <mn>123</mn>
+                            <mn>98</mn>
+                            <msrow><mo>+</mo><mn>456</mn></msrow>
+                            <msline></msline>
+                            <mn>677</mn>
+                        </mstack></math>"#;
     test("en", "ClearSpeak", expr,
-        r#"addition problem; 12398 plus 456, equals; 677; end of problem"#)?;
+        r#"addition problem; 123, plus, 98, plus, 456, equals; 677; end of problem"#)?;
     return Ok(());
 }
 
@@ -287,7 +294,7 @@ fn addition_mn_rows() -> Result<()> {
 fn decimal_subtraction_stack() -> Result<()> {
     let expr = r#"<math><mstack><mn>1.23</mn><msrow><mo>-</mo><mn>.98</mn></msrow><msline></msline><mn>0.25</mn></mstack></math>"#;
     test("en", "ClearSpeak", expr,
-        r#"subtraction problem; 1.23 minus .98, equals; 0.25; end of problem"#)?;
+        r#"subtraction problem; 1.23, minus, .98, equals; 0.25; end of problem"#)?;
     return Ok(());
 }
 
@@ -299,7 +306,7 @@ fn formatted_subtraction_stack() -> Result<()> {
         "en",
         "ClearSpeak",
         expr,
-        r#"subtraction problem; 1234567.23 minus 6543.98, equals; end of problem"#,
+        r#"subtraction problem; 1234567.23, minus, 6543.98; equals; end of problem"#,
     )?;
     return Ok(());
 }
@@ -318,7 +325,7 @@ fn carry_formatted_subtraction() -> Result<()> {
         "ClearSpeak",
         expr,
         r#"subtraction problem; crossout and carry 2 in the hundreds column, crossout and carry 12 in the tens 
-         column; 2327 minus 1156, equals; 1171; end of problem"#,
+         column; 2327, minus, 1156, equals; 1171; end of problem"#,
     )?;
     return Ok(());
 }
@@ -350,7 +357,7 @@ fn addition_stack() -> Result<()> {
                         <msrow><mn>4</mn><mn>1</mn></msrow>
                         </mstack></math>"#;
     test("en", "ClearSpeak", expr,
-        r#"addition problem; 27 plus 14, equals; 41; end of problem"#)?;
+        r#"addition problem; 27, plus, 14, equals; 41; end of problem"#)?;
     return Ok(());
 }
 
@@ -362,7 +369,7 @@ fn subtraction_stack() -> Result<()> {
         "en",
         "ClearSpeak",
         expr,
-        "subtraction problem; 505 minus 225, equals; 280; end of problem",
+        "subtraction problem; 505, minus, 225, equals; 280; end of problem",
     )?;
     return Ok(());
 }
@@ -392,7 +399,7 @@ fn carry_row() -> Result<()> {
         "en",
         "ClearSpeak",
         expr,
-        "addition problem; carry 1 in the hundreds column; 83 plus 45, equals; 128; end of problem",
+        "addition problem; carry 1 in the hundreds column; 83, plus, 45, equals; 128; end of problem",
     )?;
     return Ok(());
 }

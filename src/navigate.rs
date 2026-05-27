@@ -286,16 +286,37 @@ pub fn set_navigation_node_from_id(mathml: Element, id: &str, offset: usize) -> 
 
 /// Get's the Nav Node from the context, with some exceptions such as Toggle commands where it isn't set.
 /// Note: mathml can be any node. It isn't really used but some Element needs to be part of Evaluate().
-pub fn get_nav_node<'c>(context: &sxd_xpath::Context<'c>, var_name: &str, mathml: Element<'c>, start_node: Element<'c>, command: &str, nav_mode: &str) -> Result<String> {
+fn get_nav_node<'c>(context: &sxd_xpath::Context<'c>, var_name: &str, mathml: Element<'c>, start_node: Element<'c>, command: &str, nav_mode: &str) -> Result<NavigationPosition> {
     let start_id = start_node.attribute_value("id").unwrap_or_default();
     if command.starts_with("Toggle") {
-        return Ok( start_id.to_string() );
+        return Ok( NavigationPosition { current_node: start_id.to_string(), current_node_offset: 0 } );
     } else {
-        return context_get_variable(context, var_name, mathml)
+        let nav_node = context_get_variable(context, var_name, mathml)
                 .with_context(|| format!("When trying to {} starting at id={} in {} mode",
-                                                command, start_node.attribute_value("id").unwrap_or_default(), nav_mode));
+                                                command, start_node.attribute_value("id").unwrap_or_default(), nav_mode))?;
+        let offset = context_get_int_variable(context, "NavNodeOffset", mathml)?;
+        return Ok( NavigationPosition { current_node: nav_node, current_node_offset: offset } ) ;
     }
 }
+
+/// hack to get around speaking "123" but zooming in to the "1" in elementary math
+/// Because the words used when speaking the whole expr won't match the node we are at, speak() would return an error.
+/// However, in this case, this is just a simple number, so we can just speak that and not the whole expr.
+/// in that case, we set the id to the parent and set an offset from the parent to indicate the digit position
+fn use_elementary_math_nav_nodehack(mathml: Element, nav_position: NavigationPosition) -> Option<Element> {
+    if nav_position.current_node_offset !=  0 {
+        return None;
+    }
+
+    match get_node_by_id(mathml, &NavigationPosition { current_node: nav_position.current_node.clone(), current_node_offset: 0 }) {
+        None => return None,
+        Some(mn_digit) => {
+            return if name(get_parent(mn_digit)) == "msrow" {Some(mn_digit)} else {None};
+        }
+    }
+}
+
+
 
 // FIX: think of a better place to put this, and maybe a better interface
 /// Note: mathml can be any node. It isn't really used but some Element needs to be part of Evaluate().
@@ -555,11 +576,8 @@ pub fn do_navigate_command_string(mathml: Element, nav_command: &'static str) ->
         nav_state.mode = context_get_variable(context, "NavMode", intent)?;
         rules.pref_manager.as_ref().borrow_mut().set_user_prefs("NavMode", &nav_state.mode)?;
 
-        debug!("context value of NavNodeOffset: {:?}", context_get_variable(context, "NavNodeOffset", intent)?);
-        let nav_position = NavigationPosition {
-                current_node: get_nav_node(context, "NavNode", intent, start_node, nav_command, &nav_state.mode)?,
-                current_node_offset: context_get_int_variable(context, "NavNodeOffset", intent)?,
-            };
+        // debug!("context value of NavNodeOffset: {:?}", context_get_variable(context, "NavNodeOffset", intent)?);
+        let nav_position = get_nav_node(context, "NavNode", intent, start_node, nav_command, &nav_state.mode)?;
 
         // after a command, we either read or describe the new location (part of state)
         // also some commands are DescribeXXX/ReadXXX, so we need to look at the commands also
@@ -578,11 +596,7 @@ pub fn do_navigate_command_string(mathml: Element, nav_command: &'static str) ->
         }
 
         if nav_command.starts_with("SetPlacemarker") {
-            let new_node_id = get_nav_node(context, "NavNode", intent, start_node, nav_command, &nav_state.mode)?;
-            nav_state.place_markers[convert_last_char_to_number(nav_command)] = NavigationPosition{
-                current_node: new_node_id,
-                current_node_offset: context_get_int_variable(context, "NavNodeOffset", intent)?,
-            }
+            nav_state.place_markers[convert_last_char_to_number(nav_command)] = get_nav_node(context, "NavNode", intent, start_node, nav_command, &nav_state.mode)?;
         }
 
         let nav_mathml = get_node_by_id(intent, &nav_position);
@@ -590,7 +604,10 @@ pub fn do_navigate_command_string(mathml: Element, nav_command: &'static str) ->
             // Speak/Overview of where we landed (if we are supposed to speak it) -- use intent, not nav_intent
             // Note: NavMode might have changed, so we need to recheck the mode to see if we use LiteralSpeak
             let literal_speak = nav_state.mode == "Character";
-            let node_speech_result = speak(mathml, intent, &nav_position, literal_speak, use_read_rules);
+            let node_speech_result = match use_elementary_math_nav_nodehack(intent, nav_position.clone()) {
+                Some(mn_element) => speak(mathml, mn_element, &nav_position, literal_speak, use_read_rules),
+                None => speak(mathml, intent, &nav_position, literal_speak, use_read_rules),
+            };
             remove_literal_property(mathml, add_literal, properties);
             let node_speech = match node_speech_result {
                 Ok(speech) => speech,
@@ -999,17 +1016,18 @@ mod tests {
     /// Assert if result_id != '' and it doesn't match the id of the result of the move
     /// Returns the speech from the command
     fn test_command(command: &'static str, mathml: Element, result_id: &str) -> String {
-        // debug!("\nCommand: {}", command);
+        debug!("\nCommand: {}", command);
         NAVIGATION_STATE.with(|nav_stack| {
             let (start_id, _) = nav_stack.borrow().get_navigation_mathml_id(mathml);
             match do_navigate_command_string(mathml, command) {
                 Err(e) => {
-                    panic!("\nStarting at '{}', '{} failed.\n{}",
-                                        start_id, command, &crate::interface::errors_to_string(&e))
+                    eprintln!("\nStarting at '{}', '{} failed.\n{}",
+                                        start_id, command, &crate::interface::errors_to_string(&e));
+                    panic!("Test command failed");
                 },
                 Ok(nav_speech) => {
                     let nav_speech = nav_speech.trim_end_matches(&[' ', ',', ';']);
-                    // debug!("Full speech: {}", nav_speech);
+                    debug!("Full speech: {}", nav_speech);
                     if !result_id.is_empty() {
                         let (id, _) = nav_stack.borrow().get_navigation_mathml_id(mathml);
                         assert_eq!(result_id, id, "\nStarting at '{}', '{} failed.", start_id, command);
@@ -2013,18 +2031,19 @@ mod tests {
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
-            test_command("ZoomInAll", mathml, "nav-2");
-            test_command("MoveCellDown", mathml, "nav-4");
-            test_command("MoveCellNext", mathml, "nav-5");
-            test_command("MoveCellNext", mathml, "nav-6");
-            test_command("MoveCellNext", mathml, "nav-6");
-            test_command("MoveCellNext", mathml, "nav-6");
-            assert_eq!("no next column", test_command("MoveCellNext", mathml, "nav-6").trim_end_matches(';'));
-            test_command("MoveCellPrevious", mathml, "nav-6");
+            test_command("ZoomInAll", mathml, "nav-2-1");
+            test_command("MoveCellNext", mathml, "nav-2-2");
+            test_command("MoveCellDown", mathml, "nav-6-1");
+            test_command("MoveCellNext", mathml, "nav-6-2");
+            assert_eq!("no next column", test_command("MoveCellNext", mathml, "nav-6-2").trim_end_matches(';'));
+            test_command("MoveCellPrevious", mathml, "nav-6-1");
             test_command("MoveCellPrevious", mathml, "nav-5");
             test_command("MoveCellPrevious", mathml, "nav-4");
             assert_eq!("no previous column", test_command("MoveCellPrevious", mathml, "nav-4").trim_end_matches(';'));
-            test_command("MoveCellUp", mathml, "nav-2");
+            test_command("MoveCellUp", mathml, "nav-2-none-3");
+            test_command("ZoomOut", mathml, "nav-2");
+            test_command("MoveCellDown", mathml, "nav-3");
+            test_command("ZoomOut", mathml, "nav-1");
             return Ok(());
         });
     }

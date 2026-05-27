@@ -193,7 +193,18 @@ fn main() {
   //   </math>";
 
   let expr = r#"
-<math><mlongdiv><mn>3</mn><mn>435</mn><mn>1306</mn></mlongdiv></math>
+<math id='nav-0'>
+        <mstack id='nav-1'>
+          <mn id='nav-2'>321424</mn>
+          <mn id='nav-2'>54321</mn>
+          <msrow id='nav-3'>
+            <mo id='nav-4'>+</mo>
+            <none id='nav-5'/>
+            <mn id='nav-6'>33</mn>
+          </msrow>
+          <msline id='nav-7'/>
+        </mstack>
+        </math>
          "#;
   // let instant = Instant::now();
 
