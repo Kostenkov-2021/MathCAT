@@ -28,6 +28,8 @@ use bitflags::bitflags;
 const DECIMAL_SEPARATOR: &str = ".";
 pub const CHANGED_ATTR: &str = "data-changed";
 pub const ADDED_ATTR_VALUE: &str = "added";
+/// Place-value column index for elementary-math grid cells (0 = ones, positive = left, -1 = decimal, negative = fractional).
+const DATA_DIGIT_COL_ATTR: &str = "data-digit-col";
 pub const INTENT_ATTR: &str = "intent";
 pub const MATHML_FROM_NAME_ATTR: &str = "data-from-mathml";
 const MFENCED_ATTR_VALUE: &str = "from_mfenced";
@@ -4573,7 +4575,7 @@ pub fn get_possible_embellished_node(node: Element) -> Element {
 /// - `data-position`: Set on relevant elements to mark spatial position within the row or structure,
 ///   supporting proper navigation and spoken descriptions of layout, such as carries or digits.
 ///
-/// - `data-elem-column`: Used for multi-digit column layout to annotate children with their column 
+/// - `data-digit-col`: Used for multi-digit column layout to annotate grid cells with their column 
 ///   index (useful for highlighting, navigation, or precise speech descriptions of digit placement).
 ///
 /// - (Additional: the function also coalesces adjacent "mn" elements in "mstack" for canonical structure,
@@ -4603,6 +4605,7 @@ impl CanonicalizeContext {
 	/// Normalizes a math container (`mstack` or `mlongdiv`) by annotating it and its children
 	/// for later math processing. This sets or updates the following attributes:
 	/// - `data-decimalpoint` (on container and on `msrow` / `mscarries` rows, not on `mn`)
+	/// - `data-digit-col` (on each grid cell: `mn`, `none`, `mo`, `mscarry`, …)
 	/// - `data-operator` (on container, if a stack operator is detected)
 	/// 
 	/// Also coalesces consecutive "mn" elements for "mstack", and splits/expands row children
@@ -4716,7 +4719,7 @@ impl CanonicalizeContext {
 	/// - When `split_digits`, sets "data-repeating-decimal" on <msrow> and "data-repeating-decimal-digit" on generated <mn>s.
 	/// - Calls `mark_elem_math_mn_speech` on <mn>s which may set additional attributes.
 	/// - For non-longdiv, merges <mn> children and updates text; remaining <mn>s are removed.
-	/// - Sets "data-elem-column" on <mn>s to annotate mstack columns.
+	/// - Sets `data-digit-col` on the <msrow> (via grid padding on each cell).
 	fn process_elem_math_msrow(msrow: Element, row_position: i32, decimal_pt: &str, split_digits: bool) {
 		msrow.set_attribute_value("data-decimalpoint", decimal_pt);
 		let mn_elements: Vec<Element> = msrow.children().iter().filter_map(|child| {
@@ -4749,7 +4752,7 @@ impl CanonicalizeContext {
 		}
 		let n = mn_elements.len() as i32;
 		for (i, mn) in mn_elements.iter().enumerate() {
-			mn.set_attribute_value("data-elem-column", &(row_position + n - 1 - (i as i32)).to_string());
+			mn.set_attribute_value(DATA_DIGIT_COL_ATTR, &(row_position + n - 1 - (i as i32)).to_string());
 		}
 
 		fn is_in_longdiv(el: Element) -> bool {
@@ -4938,7 +4941,7 @@ impl CanonicalizeContext {
 	}
 
 	/// Annotates children of an <mscarries> element with their carry column position and marks the carry terminator type.
-	/// Sets "data-elem-carry-column" for each child. Final child sets "data-elem-carry-terminator" on <mscarries> if applicable.
+	/// Sets `data-digit-col` for each child. Final child sets "data-elem-carry-terminator" on <mscarries> if applicable.
 	fn annotate_mscarries_columns(mscarries: Element, row_position: i32) {
 		let children: Vec<Element> = mscarries.children().iter().filter_map(|child| {
 			if let ChildOfElement::Element(el) = child {
@@ -4948,7 +4951,7 @@ impl CanonicalizeContext {
 		}).collect();
 		let n = children.len() as i32;
 		for (i, child) in children.iter().enumerate() {
-			child.set_attribute_value("data-elem-carry-column", &(n - 1 + row_position - (i as i32)).to_string());
+			child.set_attribute_value(DATA_DIGIT_COL_ATTR, &(n - 1 + row_position - (i as i32)).to_string());
 		}
 		if let Some(last) = children.last() {
 			if name(*last) == "mscarry" {
@@ -4968,7 +4971,7 @@ impl CanonicalizeContext {
 	/// - Each `<msrow>` is digit-split: every digit char becomes its own `<mn>` cell.
 	///   Block separators (`,`, U+00A0, U+202F, ` `) are stripped; the decimal mark is kept as its own cell.
 	/// - Padding `<none/>` cells are inserted so every row spans the same column range.
-	/// - Every cell carries `@data-grid-col` (0 = ones column, increasing left, negative for fractional).
+	/// - Every cell carries `@data-digit-col` (0 = ones column, increasing left, -1 = decimal, negative = fractional).
 	/// - The `<mstack>` and each row carry `@data-grid-width`.
 	///
 	/// Id assignment for newly-created elements (`data-id-added="true"` is set in each case):
@@ -5312,7 +5315,6 @@ impl CanonicalizeContext {
 	fn grid_assign_columns_and_pad(row: Element, dims: &GridDims) {
 		let row_id = row.attribute_value("id").map(|s| s.to_string());
 		let doc = row.document();
-		let in_mscarries = name(row) == "mscarries";
 
 		let original_children: Vec<Element> = row.children().iter().filter_map(|c| {
 			if let ChildOfElement::Element(el) = c { Some(*el) } else { None }
@@ -5361,15 +5363,9 @@ impl CanonicalizeContext {
 			new_cells.push((col, take_or_pad(col)));
 		}
 
-		// Annotate each cell with `data-grid-col` (and legacy attrs used by speech rules).
+		// Annotate each cell with `data-digit-col`.
 		for (col, cell) in &new_cells {
-			cell.set_attribute_value("data-grid-col", &col.to_string());
-			if name(*cell) == "mn" {
-				cell.set_attribute_value("data-elem-column", &col.to_string());
-			}
-			if in_mscarries && matches!(name(*cell), "mn" | "mscarry" | "none") {
-				cell.set_attribute_value("data-elem-carry-column", &col.to_string());
-			}
+			cell.set_attribute_value(DATA_DIGIT_COL_ATTR, &col.to_string());
 		}
 
 		// Rebuild row child order.

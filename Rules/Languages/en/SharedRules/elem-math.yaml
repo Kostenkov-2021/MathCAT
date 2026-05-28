@@ -1,9 +1,9 @@
 ---
 # Elementary math (mstack, mlongdiv, etc.) — converted from MathPlayer elementary-math-base.tdl + en/elementary-math.tdl
 #
-# Column phrase idiom (place names in ElemMathPlace, definitions.yaml):
+# Column phrase idiom (place names in ColumnsPlace, definitions.yaml):
 #   - t: "in the"
-#   - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+#   - x: "DefinitionValue(string($Column), 'Speech', 'ColumnsPlace')"
 #   - t: "column"
 
 # --- repeating decimals ---
@@ -84,27 +84,53 @@
   tag: mstack
   match: "."
   replace:
-  - bookmark: "@id"
-  - test:
-    - if: "@stackalign='center'"
-      then: [t: "centered"]
-    - else_if: "@stackalign='left'"
-      then: [t: "left-aligned"]
-  - test:
-    - if: "@data-operator='+'"
-      then:
-      - t: "addition problem"
-      - pause: long
-    - else_if: "@data-operator='-' or @data-operator='−'"
-      then:
-      - t: "subtraction problem"
-      - pause: long
-    - else_if: "@data-operator='×'"
-      then:
-      - t: "multiplication problem"
-      - pause: long
-      else: [t: "rows of numbers"]
-  - x: "*"
+  - with:
+      variables: [MStackChildCount: "0"]  # the inserted code needs to know where the insertion is ('.' == mstack)
+      replace:
+      - bookmark: "@id"
+      - test:
+        - if: "@stackalign='center'"
+          then: [t: "centered"]
+        - else_if: "@stackalign='left'"
+          then: [t: "left-aligned"]
+      - test:
+        - if: "@data-operator='+'"
+          then:
+          - t: "addition problem"
+          - pause: long
+        - else_if: "@data-operator='-' or @data-operator='−'"
+          then:
+          - t: "subtraction problem"
+          - pause: long
+        - else_if: "@data-operator='×'"
+          then:
+          - t: "multiplication problem"
+          - pause: long
+          else: [t: "rows of numbers"]
+      - insert:
+          nodes: "*"
+          replace:
+          - set_variables: [MStackChildCount: "$MStackChildCount + 1"]
+          - with:
+              variables: [Operator: "@data-operator", Child: "*[$MStackChildCount]"]
+              replace:
+              # speak the operator if before the the first msline,
+              # but not after it or directly before it (1+2+3 equals ...)
+              # and not after a mscarries or a msline
+              # if it is a multiplication problem, then the second chunk will be addition, but it won't be marked as such
+              - test:
+                  if: "$Operator and $Child[self::m:msrow] and
+                       $Child/following-sibling::*[following-sibling::m:msline] and
+                       not($Child/following-sibling::*[1][self::m:msline])"
+                  then:
+                  - pause: short
+                  - test:
+                      if: "$Child/preceding-sibling::*[self::m:msline]"
+                      then: [x: "'+'"]   # second chunk of multiplication problem
+                      else: [x: "$Operator"]
+                  - pause: short
+     
+
   - pause: 500
   - bookmark: "@id"
   - test:
@@ -216,7 +242,6 @@
   tag: mn
   match: "parent::*[self::m:mscarries]"
   variables:
-  - Column: "number(@data-elem-carry-column)"
   - Crossout: "../@crossout and ../@crossout!='none'"
   replace:
   - test:
@@ -225,13 +250,13 @@
       else: [t: "carry"]
   - x: "translate(translate(., $BlockSeparators, ''), '\u00A0\u202F', '')"
   - test:
-      if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
+      if: "DefinitionValue(string(@data-digit-col), 'Speech', 'ColumnsPlace') != ''"
       then:
       - test:
           if: "not($Crossout) and ../@location"
           then: [pause: 100]
       - t: "in the"
-      - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string(@data-digit-col), 'Speech', 'ColumnsPlace')"
       - t: "column"
       # FIX: this looks like an AI-generated mess
       - test:
@@ -265,20 +290,20 @@
   - pause: 100
   - x: "substring($ResultText, $DigitPos, 1)"
   - test:
-      if: "DefinitionValue(string($RowPos), 'Speech', 'ElemMathPlace') != ''"
+      if: "DefinitionValue(string($RowPos), 'Speech', 'ColumnsPlace') != ''"
       then:
       - t: "in the"
-      - x: "DefinitionValue(string($RowPos), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string($RowPos), 'Speech', 'ColumnsPlace')"
       - t: "column"
   - t: "equals"
   - x: "translate(*[last()], $BlockSeparators, '')"
   - test:
     - if: "$RowPos=0"
       then: []
-    - else_if: "DefinitionValue(string($RowPos), 'Speech', 'ElemMathPlace') != ''"
+    - else_if: "DefinitionValue(string($RowPos), 'Speech', 'ColumnsPlace') != ''"
       then:
       - t: "in the"
-      - x: "DefinitionValue(string($RowPos), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string($RowPos), 'Speech', 'ColumnsPlace')"
       - t: "column"
   - pause: 800
   - x: "(preceding-sibling::*[1][self::m:mn] | preceding-sibling::*[1]/m:mn[1])[1]"
@@ -286,22 +311,22 @@
     - if: "preceding-sibling::*[1][self::m:mn]"
       then:
       - t: "in the"
-      - x: "DefinitionValue('0', 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue('0', 'Speech', 'ColumnsPlace')"
       - t: "column"
-    - else_if: "DefinitionValue(string($PrevRowPos), 'Speech', 'ElemMathPlace') != ''"
+    - else_if: "DefinitionValue(string($PrevRowPos), 'Speech', 'ColumnsPlace') != ''"
       then:
       - t: "in the"
-      - x: "DefinitionValue(string($PrevRowPos), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string($PrevRowPos), 'Speech', 'ColumnsPlace')"
       - t: "column"
   - pause: 100
   - t: "minus"
   - pause: 100
   - x: "translate(*[last()], $BlockSeparators, '')"
   - test:
-      if: "DefinitionValue(string($RowPos), 'Speech', 'ElemMathPlace') != ''"
+      if: "DefinitionValue(string($RowPos), 'Speech', 'ColumnsPlace') != ''"
       then:
       - t: "in the"
-      - x: "DefinitionValue(string($RowPos), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string($RowPos), 'Speech', 'ColumnsPlace')"
       - t: "column"
 
 - name: msrow-longdiv-step-c
@@ -316,10 +341,10 @@
   replace:
   - x: "substring(*[1], 1, 1)"
   - test:
-      if: "DefinitionValue(string($LinePos), 'Speech', 'ElemMathPlace') != ''"
+      if: "DefinitionValue(string($LinePos), 'Speech', 'ColumnsPlace') != ''"
       then:
       - t: "in the"
-      - x: "DefinitionValue(string($LinePos), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string($LinePos), 'Speech', 'ColumnsPlace')"
       - t: "column"
   - test:
       if: "$HasMore"
@@ -361,17 +386,17 @@
           else: [t: "digits"]
       - pause: short
   - x: "ElemMathRowDigits(.)"
-  - test:
-      # speak the operator if before the the first msline, but not after it or directly before it (1+2+3 equals ...)
-      # if it is a multiplication problem, then the second chunk will be addition, but it won't be marked as such
-      if: "$Operator and following-sibling::*[following-sibling::m:msline] and not(following-sibling::*[1][self::m:msline])"
-      then:
-      - pause: short
-      - test:
-          if: "preceding-sibling::*[self::m:msline]"
-          then: [x: "'+'"]   # second chunk of multiplication problem
-          else: [x: "$Operator"]
-      - pause: short
+  # - test:
+  #     # speak the operator if before the the first msline, but not after it or directly before it (1+2+3 equals ...)
+  #     # if it is a multiplication problem, then the second chunk will be addition, but it won't be marked as such
+  #     if: "$Operator and following-sibling::*[following-sibling::m:msline] and not(following-sibling::*[1][self::m:msline])"
+  #     then:
+  #     - pause: short
+  #     - test:
+  #         if: "preceding-sibling::*[self::m:msline]"
+  #         then: [x: "'+'"]   # second chunk of multiplication problem
+  #         else: [x: "$Operator"]
+  #     - pause: short
 
 - name: msline-default-zero
   tag: msline
@@ -432,16 +457,14 @@
 - name: menclose-in-mscarries
   tag: menclose
   match: "parent::*[self::m:mscarries]"
-  variables:
-  - Column: "number(@data-elem-carry-column)"
   replace:
   - t: "carry"
   - x: "m:mn"
   - test:
-      if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
+      if: "DefinitionValue(string(@data-digit-col), 'Speech', 'ColumnsPlace') != ''"
       then:
       - t: "in the"
-      - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string(@data-digit-col), 'Speech', 'ColumnsPlace')"
       - t: "column"
       - test:
           if: "following-sibling::*[self::m:mn or self::m:mscarry or self::m:menclose]"
@@ -452,15 +475,13 @@
   match:
   - "parent::*[self::m:mscarries] and not(@data-changed='added') and count(following-sibling::*) > 0 and"
   - "(../@crossout and ../@crossout!='none') or (not(@data-changed='added') and count(preceding-sibling::*[not(@data-changed='added')])=0)"
-  variables:
-  - Column: "number(@data-elem-carry-column)"
   replace:
   - t: "crossout"
   - test:
-      if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
+      if: "DefinitionValue(string(@data-digit-col), 'Speech', 'ColumnsPlace') != ''"
       then:
       - t: "in the"
-      - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string(@data-digit-col), 'Speech', 'ColumnsPlace')"
       - t: "column"
       - test:
           if: "following-sibling::*[self::m:mn or self::m:mscarry or self::m:menclose]"
@@ -480,7 +501,7 @@
   tag: mscarry
   match: "parent::*[self::m:mscarries] and *[self::m:none] and not(*[self::m:mn])"
   variables:
-  - Column: "count(../m:*) - 1 + number(IfThenElse(../@data-position, ../@data-position, 0)) - count(preceding-sibling::*)"
+  - Column: "IfThenElse(@data-digit-col, number(@data-digit-col), count(../m:*) - 1 + number(IfThenElse(../@data-position, ../@data-position, 0)) - count(preceding-sibling::*))"
   - Crossout: "(@crossout and @crossout!='none') or (../@crossout and ../@crossout!='none')"
   replace:
   - test:
@@ -488,10 +509,10 @@
       then:
       - t: "crossout"
       - test:
-          if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
+          if: "DefinitionValue(string($Column), 'Speech', 'ColumnsPlace') != ''"
           then:
           - t: "in the"
-          - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+          - x: "DefinitionValue(string($Column), 'Speech', 'ColumnsPlace')"
           - t: "column"
           - test:
               if: "following-sibling::*[self::m:mn or self::m:mscarry or self::m:menclose]"
@@ -501,7 +522,7 @@
   tag: mscarry
   match: "parent::*[self::m:mscarries]"
   variables:
-  - Column: "count(../m:*) - 1 + number(IfThenElse(../@data-position, ../@data-position, 0)) - count(preceding-sibling::*)"
+  - Column: "IfThenElse(@data-digit-col, number(@data-digit-col), count(../m:*) - 1 + number(IfThenElse(../@data-position, ../@data-position, 0)) - count(preceding-sibling::*))"
   - Crossout: "(@crossout and @crossout!='none') or (../@crossout and ../@crossout!='none')"
   replace:
   - bookmark: "@id"
@@ -511,10 +532,10 @@
       else: [t: "carry"]
   - x: "translate(translate(*[1], $BlockSeparators, ''), '\u00A0\u202F', '')"
   - test:
-      if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
+      if: "DefinitionValue(string($Column), 'Speech', 'ColumnsPlace') != ''"
       then:
       - t: "in the"
-      - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+      - x: "DefinitionValue(string($Column), 'Speech', 'ColumnsPlace')"
       - t: "column"
       - test:
           if: "following-sibling::*[self::m:mn or self::m:mscarry or self::m:menclose]"
@@ -524,7 +545,6 @@
   tag: none
   match: "parent::*[self::m:mscarry]"
   variables:
-  - Column: "number(@data-elem-carry-column)"
   - Crossout: "((../@crossout and ../@crossout!='none') or (../../@crossout and ../../@crossout!='none')) and not(../@crossout='none')"
   replace:
   - test:
@@ -532,10 +552,10 @@
       then:
       - t: "crossout"
       - test:
-          if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
+          if: "DefinitionValue(string(@data-digit-col), 'Speech', 'ColumnsPlace') != ''"
           then:
           - t: "in the"
-          - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+          - x: "DefinitionValue(string(@data-digit-col), 'Speech', 'ColumnsPlace')"
           - t: "column"
 
 - name: mscarry-content
@@ -580,9 +600,8 @@
 
 - name: elem-math-mn-digit
   tag: mn
-  match: "parent::m:msrow and (ancestor::m:mstack or ancestor::m:mlongdiv) and @data-elem-column and not(@data-elem-whole='true')"
+  match: "parent::m:msrow and (ancestor::m:mstack or ancestor::m:mlongdiv) and @data-digit-col and not(@data-elem-whole='true')"
   variables:
-  - Column: "number(@data-elem-column)"
   - DecimalPoint: "parent::m:msrow/@data-decimalpoint"
   - InLongdiv: "ancestor::m:mlongdiv"
   replace:
@@ -604,10 +623,10 @@
         - test:
           - if: "$Column=-1"
             then: [t: "decimal point"]
-          - else_if: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace') != ''"
+          - else_if: "DefinitionValue(@data-digit-col, 'Speech', 'ColumnsPlace') != ''"
             then:
             - t: "in the"
-            - x: "DefinitionValue(string($Column), 'Speech', 'ElemMathPlace')"
+            - x: "DefinitionValue(@data-digit-col, 'Speech', 'ColumnsPlace')"
             - t: "column"
           - else:
             - t: "in the ten to the"

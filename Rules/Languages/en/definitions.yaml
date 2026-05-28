@@ -77,11 +77,11 @@
     "munder": "base; under limit",
     "mover": "base; upper limit",
     "munderover": "base; under limit; upper limit",
-
+    "mlongdiv": "divisor; result; dividend",
     # words for moving into and out of one of the parts (e.g., "move right 'out of' numerator, 'in' denominator")
     # it's a hack to put them here, but at least they are grouped with the other navigation parts
     "in": "in",
-    "out": "out of",
+    "out": "out ",
   }
 
 - KnownWords: {
@@ -385,7 +385,7 @@
     ]
 
 # Elementary math column names (always plural in speech)
-- ElemMathPlace: {
+- ColumnsPlace: {
     "0": "ones",
     "1": "tens",
     "2": "hundreds",

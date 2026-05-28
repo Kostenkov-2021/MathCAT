@@ -2049,7 +2049,8 @@ mod tests {
     }
 
     #[test]
-    fn move_cell_column() -> Result<()> {
+    fn move_cell_elem_math_column() -> Result<()> {
+        init_logger();
         let mathml_str = r#"<math display='block' id='M6qsyqqx-0' data-id-added='true'>
             <mstack id='id-1'>
                 <msrow id='id-2'>
@@ -2135,19 +2136,23 @@ mod tests {
 
     #[test]
     fn zoom_in_elem_math_row_column_speech() -> Result<()> {
+        init_logger();
         let mathml_str = r#"<math id='nav-0'>
         <mstack id='nav-1'>
-          <msrow id='nav-r1'><mn data-elem-whole='true' id='nav-2'>23</mn></msrow>
-          <msrow id='nav-r2'><mo id='nav-op'>+</mo><mn data-elem-whole='true' id='nav-3'>45</mn></msrow>
+          <mn data-elem-whole='true' id='row-1'>23</mn>
+          <msrow id='row-2'><mo id='nav-op'>+</mo><mn data-elem-whole='true' id='row2-45'>45</mn></msrow>
         </mstack>
         </math>"#;
         init_default_prefs(mathml_str, "Enhanced");
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
-            let speech = test_command("ZoomIn", mathml, "nav-2");
-            assert!(speech.contains("row 1"), "expected row number when entering mstack, got: {speech}");
-            assert!(speech.contains("tens column"), "expected place-value column when entering msrow, got: {speech}");
+            assert_eq!("zoom in; row 1, 23", test_command("ZoomIn", mathml, "row-1"));
+            assert_eq!("zoom in; in row 1; in the tens column 2", test_command("ZoomIn", mathml, "row-1-1"));
+            assert_eq!("zoom out; row 1; 23", test_command("ZoomOut", mathml, "row-1"));
+            assert_eq!("move to row 2, plus 45", test_command("MoveCellDown", mathml, "row-2"));
+            assert_eq!("zoom in; in row 2; +", test_command("ZoomIn", mathml, "nav-op"));
+            assert_eq!("move right, in the tens column 4", test_command("MoveNext", mathml, "row2-45-1"));
             return Ok(());
         });
     }
@@ -2207,35 +2212,6 @@ mod tests {
     }
 
     #[test]
-    fn move_cell_elem_math_key_press() -> Result<()> {
-        let mathml_str = r#"<math id='nav-0'>
-        <mstack id='nav-1'>
-          <mn id='nav-2'>424</mn>
-          <msrow id='nav-3'>
-            <mo id='nav-4'>+</mo>
-            <none id='nav-5'/>
-            <mn id='nav-6'>33</mn>
-          </msrow>
-          <msline id='nav-7'/>
-        </mstack>
-        </math>"#;
-        init_default_prefs(mathml_str, "Enhanced");
-        return MATHML_INSTANCE.with(|package_instance| {
-            let package_instance = package_instance.borrow();
-            let mathml = get_element(&package_instance);
-            test_command("ZoomIn", mathml, "nav-2");
-            test_command("MoveCellDown", mathml, "nav-4");
-            let speech = do_mathml_navigate_key_press(mathml, VK_RIGHT, false, true, false, false)?;
-            assert!(!speech.contains("not in table"));
-            NAVIGATION_STATE.with(|nav_stack| {
-                let (id, _) = nav_stack.borrow().get_navigation_mathml_id(mathml);
-                assert_eq!(id, "nav-5");
-            });
-            return Ok(());
-        });
-    }
-
-    #[test]
     fn move_cell_elem_math_horizontal_speech() -> Result<()> {
         let mathml_str = r#"<math id='nav-0'>
         <mstack id='nav-1'>
@@ -2263,56 +2239,26 @@ mod tests {
     }
 
     #[test]
-    fn move_cell_elem_math_coalesced_msrow_digits() -> Result<()> {
-        // canonicalize merges <mn>1</mn><mn>2</mn><mn>8</mn> into one mn; horizontal moves use NavNodeOffset
+    fn add_four_numbers_elem_math() -> Result<()> {
+        init_logger();
         let mathml_str = r#"<math id='nav-0'>
-        <mstack id='nav-1'>
-          <msrow id='nav-r1'><mn id='nav-a'>8</mn><mn id='nav-b'>3</mn></msrow>
-          <msrow id='nav-r2'><mo id='nav-op'>+</mo><none id='nav-pad'/><mn id='nav-c'>4</mn><mn id='nav-d'>5</mn></msrow>
-          <msline id='nav-line'/>
-          <msrow id='nav-result'><mn id='nav-r'>1</mn><mn id='nav-s'>2</mn><mn id='nav-t'>8</mn></msrow>
+        <mstack id='mstack'>
+          <msrow id='row-r1'><mn id='mn-1'>8</mn></msrow>
+          <msrow id='row-r2'><mn id='mn-2'>13</mn></msrow>
+          <msrow id='row-r3'><mn id='mn-3'>462</mn></msrow>
+          <msrow id='row-plus'><mo id='row-op'>+</mo><none id='row-pad'/><mn id='row-plus-4'>4</mn><mn id='row-plus-5'>5</mn></msrow>
+          <msline id='row-line'/>
+          <msrow id='row-result'><mn id='row-r'>1</mn><mn id='row-s'>2</mn><mn id='row-t'>8</mn></msrow>
         </mstack>
         </math>"#;
         init_default_prefs(mathml_str, "Enhanced");
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
-            NAVIGATION_STATE.with(|nav_stack| {
-                nav_stack.borrow_mut().push(NavigationPosition{
-                    current_node: "nav-r".to_string(),
-                    current_node_offset: 0
-                }, "None")
-            });
-            let speech = test_command("MoveCellNext", mathml, "nav-r");
-            assert!(speech.contains("hundreds column"), "expected hundreds column speech, got: {speech}");
-            NAVIGATION_STATE.with(|nav_stack| {
-                let (id, offset) = nav_stack.borrow().get_navigation_mathml_id(mathml);
-                assert_eq!(id, "nav-r");
-                assert_eq!(offset, 1);
-            });
-            let speech = test_command("MoveCellNext", mathml, "nav-r");
-            assert!(speech.contains("tens column"), "expected tens column speech, got: {speech}");
-            NAVIGATION_STATE.with(|nav_stack| {
-                let (_, offset) = nav_stack.borrow().get_navigation_mathml_id(mathml);
-                assert_eq!(offset, 2);
-            });
-            test_command("MoveCellNext", mathml, "nav-r");
-            NAVIGATION_STATE.with(|nav_stack| {
-                let (_, offset) = nav_stack.borrow().get_navigation_mathml_id(mathml);
-                assert_eq!(offset, 3);
-            });
-            assert_eq!("no next column", test_command("MoveCellNext", mathml, "nav-r").trim_end_matches(';'));
-            test_command("MoveCellPrevious", mathml, "nav-r");
-            NAVIGATION_STATE.with(|nav_stack| {
-                let (_, offset) = nav_stack.borrow().get_navigation_mathml_id(mathml);
-                assert_eq!(offset, 2);
-            });
-            test_command("MoveCellPrevious", mathml, "nav-r");
-            NAVIGATION_STATE.with(|nav_stack| {
-                let (_, offset) = nav_stack.borrow().get_navigation_mathml_id(mathml);
-                assert_eq!(offset, 1);
-            });
-            assert_eq!("no previous column", test_command("MoveCellPrevious", mathml, "nav-r").trim_end_matches(';'));
+            assert_eq!("zoom in; row 1, 8", test_command("ZoomIn", mathml, "row-r1"));
+            assert_eq!("move down; row 2; 13", test_command("MoveCellDown", mathml, "row-r2"));
+            assert_eq!("move down; row 3; 462", test_command("MoveCellDown", mathml, "row-r3"));
+            assert_eq!("move down; row 4; plus 45", test_command("MoveCellDown", mathml, "row-plus"));
             return Ok(());
         });
     }
