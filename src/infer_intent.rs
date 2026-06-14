@@ -101,13 +101,12 @@ fn add_fixity(intent: Element) {
             let definitions = definitions.borrow();
             // debug!("    add_fixity: intent_name: {}, ", intent_name);
             if let Some(definition) = definitions.get_hashmap("IntentMappings").unwrap().get(intent_name) &&
-                let Some((fixity, _)) = definition.split_once("=") {
-                    if fixity != "nofix" {
+               let Some((fixity, _)) = definition.split_once("=") &&
+               fixity != "nofix" {
                         let new_properties = (if properties.is_empty() {":"} else {properties}).to_string() + fixity + ":";
                         intent.set_attribute_value(INTENT_PROPERTY, &new_properties);
                         // debug!("Added fixity: new value '{}'", intent.attribute_value(INTENT_PROPERTY).unwrap());
                     }
-                };
         });
     }
 }
