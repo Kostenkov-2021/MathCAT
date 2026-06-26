@@ -1025,20 +1025,26 @@ mod tests {
         return report_any_panic(result);
     }
 
-    fn init_default_prefs(mathml: &str, nav_mode_default: &str) {
-        init_prefs(mathml, nav_mode_default, "en");
+    fn init_default_prefs(mathml: &str, nav_mode_default: &str) -> Result<()> {
+        return init_prefs(mathml, nav_mode_default, "en");
     }
 
-    fn init_prefs(mathml: &str, nav_mode_default: &str, language: &str) {
-        set_rules_dir(super::super::abs_rules_dir_path()).unwrap();
-        set_preference("NavMode", nav_mode_default).unwrap();
-        set_preference("NavVerbosity", "Verbose").unwrap();
-        set_preference("AutoZoomOut", "True").unwrap();
-        set_preference("Language", language).unwrap();
-        set_preference("SpeechStyle", "SimpleSpeak").unwrap();
-        set_preference("Verbosity", "Medium").unwrap();
-        set_preference("Overview", "False").unwrap();
-        set_mathml(mathml).unwrap();
+    fn init_prefs(mathml: &str, nav_mode_default: &str, language: &str) -> Result<()> {
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+        init_panic_handler();
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            set_rules_dir(super::super::abs_rules_dir_path())?;
+            set_preference("NavMode", nav_mode_default)?;
+            set_preference("NavVerbosity", "Verbose")?;
+            set_preference("AutoZoomOut", "True")?;
+            set_preference("Language", language)?;
+            set_preference("SpeechStyle", "SimpleSpeak")?;
+            set_preference("Verbosity", "Medium")?;
+            set_preference("Overview", "False")?;
+            set_mathml(mathml)?;
+            return Ok( () );
+        }));
+        return report_any_panic(result);
     }
 
     #[test]
@@ -1047,7 +1053,7 @@ mod tests {
                 <msup id='msup'><mi id='base'>b</mi><mn id='exp'>2</mn></msup>
                 <mi id='denom'>d</mi>
             </mfrac></math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1072,7 +1078,7 @@ mod tests {
                 </mrow>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         debug!("--- Enhanced ---");
         MATHML_INSTANCE.with(|package_instance| -> Result<()> {
             let package_instance = package_instance.borrow();
@@ -1082,7 +1088,7 @@ mod tests {
             return Ok( () );
         })?;
 
-        init_default_prefs(mathml_str, "Simple");
+        init_default_prefs(mathml_str, "Simple")?;
         debug!("--- Simple ---");
         MATHML_INSTANCE.with(|package_instance: &RefCell<Package>| -> Result<()> {
             let package_instance = package_instance.borrow();
@@ -1092,7 +1098,7 @@ mod tests {
             return Ok( () );
         })?;
         
-        init_default_prefs(mathml_str, "Character");
+        init_default_prefs(mathml_str, "Character")?;
         debug!("--- Character ---");
         MATHML_INSTANCE.with(|package_instance| -> Result<()> {
             let package_instance = package_instance.borrow();
@@ -1134,7 +1140,7 @@ mod tests {
                 <mn id='id-19'>1</mn>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1160,7 +1166,7 @@ mod tests {
                 <msup id='msup'><mi id='base'>b</mi><mn id='exp'>2</mn></msup>
                 <mi id='denom'>d</mi>
             </mfrac></math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1175,7 +1181,7 @@ mod tests {
                 <msup id='msup'><mi id='base'>b</mi><mn id='exp'>2</mn></msup>
                 <mi id='denom'>d</mi>
             </mfrac></math>";
-        init_prefs(mathml_str, "Enhanced", "ru");
+        init_prefs(mathml_str, "Enhanced", "ru")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1204,7 +1210,7 @@ mod tests {
                 <msup id='msup'><mi id='base'>b</mi><mn id='exp'>2</mn></msup>
                 <mi id='denom'>d</mi>
             </mfrac></math>";
-            init_default_prefs(mathml_str, "Enhanced");
+            init_default_prefs(mathml_str, "Enhanced")?;
             return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1215,12 +1221,7 @@ mod tests {
                 }, "None")
             });
             test_command("ZoomOut", mathml, "msup")?;
-
-            let _nav_speech = do_navigate_command_and_param(mathml, NavigationCommand::Zoom, NavigationParam::Previous)?;
-            NAVIGATION_STATE.with(|nav_stack| {
-                let (id, _) = nav_stack.borrow().get_navigation_mathml_id(mathml);
-                assert_eq!(id, "mfrac");
-            });
+            test_command("ZoomOut", mathml, "mfrac")?;
             return Ok( () );
         });
     }
@@ -1231,7 +1232,7 @@ mod tests {
                 <msup id='msup'><mi id='base'>b</mi><mn id='exp'>2</mn></msup>
                 <mi id='denom'>d</mi>
             </mfrac></math>";
-            init_default_prefs(mathml_str, "Enhanced");
+            init_default_prefs(mathml_str, "Enhanced")?;
             return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1260,7 +1261,7 @@ mod tests {
           </mrow>
         </mrow>
        </math>";
-       init_default_prefs(mathml_str, "Enhanced");
+       init_default_prefs(mathml_str, "Enhanced")?;
        return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1301,7 +1302,7 @@ mod tests {
           </mrow>
         </mfrac>
        </math>";
-       init_default_prefs(mathml_str, "Enhanced");
+       init_default_prefs(mathml_str, "Enhanced")?;
        return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1332,7 +1333,7 @@ mod tests {
                 <msup id='msup'><mi id='base'>b</mi><mn id='exp'>2</mn></msup>
                 <mi id='denom'>d</mi>
             </mfrac></math>";
-            init_default_prefs(mathml_str, "Enhanced");
+            init_default_prefs(mathml_str, "Enhanced")?;
             return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1362,7 +1363,7 @@ mod tests {
                 <mrow id='num'><msup id='msup'><mi id='base'>b</mi><mn id='exp'>2</mn></msup><mo id='factorial'>!</mo></mrow>
                 <mi id='denom'>d</mi>
             </mfrac></math>";
-            init_default_prefs(mathml_str, "Enhanced");
+            init_default_prefs(mathml_str, "Enhanced")?;
             return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1381,12 +1382,7 @@ mod tests {
                 }, "None")
             });
             test_command("MoveLineStart", mathml, "msup")?;
-
-            let _nav_speech = do_navigate_command_and_param(mathml, NavigationCommand::Move, NavigationParam::Start)?;
-            NAVIGATION_STATE.with(|nav_stack| {
-                let (id, _) = nav_stack.borrow().get_navigation_mathml_id(mathml);
-                assert_eq!(id, "num");
-            });
+            test_command("MoveStart", mathml, "num")?;
             return Ok( () );
         });
     }
@@ -1403,7 +1399,7 @@ mod tests {
           <mi id='id-6'>x</mi>
         </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1456,7 +1452,7 @@ mod tests {
           <mn id='id-9'>4</mn>
         </mrow>
        </math>";
-        init_default_prefs(mathml_str, "Character");
+        init_default_prefs(mathml_str, "Character")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1487,7 +1483,7 @@ mod tests {
                 <mi id='id-6'>x</mi>a
             </mrow>
             </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1515,7 +1511,7 @@ mod tests {
                 <mi id='id-7'>x</mi>
             </mrow>
             </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1536,17 +1532,17 @@ mod tests {
     fn zoom_msubsup() -> Result<()> {
         // msubsup is trickier because it creates an intent within an intent, so offsets need to be handled properly
         let mathml_str = "<math id='math'><msubsup id='msubsup'><mi id='base'>𝑥</mi><mn id='sub'>1</mn><mn id='sup'>2</mn></msubsup></math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
-            set_preference("NavMode", "Enhanced").unwrap();
+            set_preference("NavMode", "Enhanced")?;
             debug!("Enhanced mode");
             do_commands(mathml)?;
-            set_preference("NavMode", "Simple").unwrap();
+            set_preference("NavMode", "Simple")?;
             debug!("Simple mode");
             do_commands(mathml)?;
-            set_preference("NavMode", "Character").unwrap();
+            set_preference("NavMode", "Character")?;
             debug!("Character mode");
             assert_eq!("zoom in; in base; x", test_command("ZoomIn", mathml, "base")?);
             assert_eq!("zoom out; out of base; x sub 1 super 2 end super", test_command("ZoomOut", mathml, "msubsup")?);
@@ -1586,7 +1582,7 @@ mod tests {
                 </mrow>
             </mmultiscripts>
             </math>";
-            init_default_prefs(mathml_str, "Character");
+            init_default_prefs(mathml_str, "Character")?;
             return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1631,7 +1627,7 @@ mod tests {
           </mrow>
         </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Character");
+        init_default_prefs(mathml_str, "Character")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1667,17 +1663,17 @@ mod tests {
                 </mrow>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Character");
+        init_default_prefs(mathml_str, "Character")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
             debug!("Character mode");
             do_commands(mathml)?;
-            set_preference("NavMode", "Simple").unwrap();
+            set_preference("NavMode", "Simple")?;
             debug!("Simple mode");
             test_command("ZoomIn", mathml, "id-3")?;  // zooms to the first parenthesis
             do_commands(mathml)?;
-            set_preference("NavMode", "Enhanced").unwrap();
+            set_preference("NavMode", "Enhanced")?;
             debug!("Enhanced mode");
             test_command("ZoomIn", mathml, "id-4")?;
             test_command("MoveNext", mathml, "id-6")?;
@@ -1717,14 +1713,14 @@ mod tests {
             </mrow>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Simple");
+        init_default_prefs(mathml_str, "Simple")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
             do_commands(mathml)?;
-            set_preference("NavMode", "Simple").unwrap();
+            set_preference("NavMode", "Simple")?;
             do_commands(mathml)?;
-            set_preference("NavMode", "Enhanced").unwrap();
+            set_preference("NavMode", "Enhanced")?;
             test_command("ZoomIn", mathml, "id-2")?;
             test_command("MoveNext", mathml, "id-6")?;
             test_command("MovePrevious", mathml, "id-2")?;
@@ -1759,7 +1755,7 @@ mod tests {
                 <mi id='id-6'>z</mi>
                 </mrow>
             </math>";
-            init_default_prefs(mathml_str, "Character");
+            init_default_prefs(mathml_str, "Character")?;
             return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1785,7 +1781,7 @@ mod tests {
                 <msqrt id='id-6'><mi id='id-7'>z</mi></msqrt>
                 </mrow>
             </math>";
-        init_prefs(mathml_str, "Character", "ru");
+        init_prefs(mathml_str, "Character", "ru")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1812,7 +1808,7 @@ mod tests {
                     </mfrac>
                 </mrow>
             </math>";
-        init_default_prefs(mathml_str, "Character");
+        init_default_prefs(mathml_str, "Character")?;
         return MATHML_INSTANCE.with(|package_instance| {
         let package_instance = package_instance.borrow();
         let mathml = get_element(&package_instance);
@@ -1849,7 +1845,7 @@ mod tests {
           </mrow>
         </mrow>
        </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1880,8 +1876,8 @@ mod tests {
           </mrow>
         </mrow>
        </math>";
-        init_default_prefs(mathml_str, "Simple");
-        set_preference("SpeechStyle", "ClearSpeak").unwrap();
+        init_default_prefs(mathml_str, "Simple")?;
+        set_preference("SpeechStyle", "ClearSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -1952,7 +1948,7 @@ mod tests {
           </mtr>
         </mtable>
        </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2033,7 +2029,7 @@ mod tests {
           </mtr>
         </mtable>
        </math>";
-       init_default_prefs(mathml_str, "Character");
+       init_default_prefs(mathml_str, "Character")?;
        return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2076,7 +2072,7 @@ mod tests {
           <mi id='c'>c</mi>
         </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Character");
+        init_default_prefs(mathml_str, "Character")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2100,8 +2096,8 @@ mod tests {
                 <msup id='msup'><mi id='base'>b</mi><mn id='exp'>2</mn></msup>
                 <mi id='denom'>d</mi>
             </mfrac></math>";
-        init_default_prefs(mathml_str, "Enhanced");
-        set_preference("SpeechStyle", "ClearSpeak").unwrap();
+        init_default_prefs(mathml_str, "Enhanced")?;
+        set_preference("SpeechStyle", "ClearSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2138,7 +2134,7 @@ mod tests {
           <mn id='10'>10</mn>
         </mrow>
        </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         set_preference("AutoZoomOut", "False")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
@@ -2164,7 +2160,7 @@ mod tests {
                 <mn id='3'>3</mn>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         set_preference("AutoZoomOut", "False")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
@@ -2202,7 +2198,7 @@ mod tests {
         return Ok( () );
 
         fn test_mode(mathml_str: &str, mode: &str) -> Result<()> {
-            init_default_prefs(mathml_str, mode);
+            init_default_prefs(mathml_str, mode)?;
             set_preference("AutoZoomOut", "False")?;
             return MATHML_INSTANCE.with(|package_instance| {
                 debug!("--- Testing mode {mode} ---");
@@ -2263,7 +2259,7 @@ mod tests {
             <mo id='close'>]</mo>
             </mrow>
         </math>"#;
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2298,7 +2294,7 @@ mod tests {
                 </msub>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
+        init_default_prefs(mathml_str, "Enhanced")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2328,8 +2324,8 @@ mod tests {
             <mo id='close'>|</mo>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
-        set_preference("SpeechStyle", "ClearSpeak").unwrap();
+        init_default_prefs(mathml_str, "Enhanced")?;
+        set_preference("SpeechStyle", "ClearSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2366,8 +2362,8 @@ mod tests {
           </mtable>
         </mrow>
        </math>";
-        init_default_prefs(mathml_str, "Enhanced");
-        set_preference("SpeechStyle", "ClearSpeak").unwrap();
+        init_default_prefs(mathml_str, "Enhanced")?;
+        set_preference("SpeechStyle", "ClearSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2380,7 +2376,7 @@ mod tests {
             assert_eq!(speech, "zoom out; 2 cases; case 1; negative x comma; if x is less than 0; case 2; positive x comma; if x, is greater than or equal to 0");
             let speech = test_command("ZoomIn", mathml, "row-1")?;
             assert_eq!(speech, "zoom in; case 1; negative x comma; if x is less than 0");
-            set_preference("NavMode", "Character").unwrap();
+            set_preference("NavMode", "Character")?;
             let speech = test_command("MovePrevious", mathml, "open")?;
             assert_eq!(speech, "move left; open brace");
             return Ok( () );
@@ -2404,8 +2400,8 @@ mod tests {
                 <mn id='id-9'>2</mn>
             </msup>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
-        set_preference("SpeechStyle", "ClearSpeak").unwrap();
+        init_default_prefs(mathml_str, "Enhanced")?;
+        set_preference("SpeechStyle", "ClearSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2429,8 +2425,8 @@ mod tests {
                     <mo id='id-6'>)</mo>
                     </mrow>
                 </math>";
-        init_default_prefs(mathml_str, "Character");
-        set_preference("SpeechStyle", "ClearSpeak").unwrap();
+        init_default_prefs(mathml_str, "Character")?;
+        set_preference("SpeechStyle", "ClearSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2448,7 +2444,7 @@ mod tests {
             // let speech = test_command("ZoomOut", mathml, "id-1")?;
             // assert_eq!(speech, "zoom out; open paren n over k, close paren");
 
-            set_preference("NavMode", "Simple").unwrap();
+            set_preference("NavMode", "Simple")?;
             debug!("Simple mode");
             let speech = test_command("ZoomIn", mathml, "id-4")?;
             assert_eq!(speech, "zoom in; in part 1; n");
@@ -2459,7 +2455,7 @@ mod tests {
             let speech = test_command("ZoomOut", mathml, "id-1-literal-0")?;
             assert_eq!(speech, "zoom out; out of part 2; n choose k");
 
-            set_preference("NavMode", "Enhanced").unwrap();
+            set_preference("NavMode", "Enhanced")?;
             debug!("Enhanced mode");
             let speech = test_command("ZoomIn", mathml, "id-4")?;
             assert_eq!(speech, "zoom in; in part 1; n");
@@ -2499,7 +2495,7 @@ mod tests {
                 <mo id='id-25'>)</mo>
             </mrow>
         </math>"#;
-        init_default_prefs(mathml_str, "Simple");
+        init_default_prefs(mathml_str, "Simple")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2530,8 +2526,8 @@ mod tests {
                     </mrow>
                 </mrow>
             </math>";
-        init_default_prefs(mathml_str, "Enhanced");
-        set_preference("SpeechStyle", "ClearSpeak").unwrap();
+        init_default_prefs(mathml_str, "Enhanced")?;
+        set_preference("SpeechStyle", "ClearSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2543,7 +2539,7 @@ mod tests {
             assert_eq!(speech, "zoom in; in absolute value; x");
             let speech = test_command("MoveNext", mathml, "x")?;
             assert_eq!(speech, "cannot move right, end of math");
-            set_preference("NavMode", "Character").unwrap();
+            set_preference("NavMode", "Character")?;
             let speech = test_command("MoveNext", mathml, "end")?;
             assert_eq!(speech, "move right; vertical line");
             let speech = test_command("MoveLineStart", mathml, "2")?;
@@ -2566,8 +2562,8 @@ mod tests {
                 <mn id='3'>3</mn>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
-        set_preference("SpeechStyle", "SimpleSpeak").unwrap();
+        init_default_prefs(mathml_str, "Enhanced")?;
+        set_preference("SpeechStyle", "SimpleSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2601,21 +2597,14 @@ mod tests {
                 </mrow>
             </mfrac>
         </math>";
-        init_prefs(mathml_str, "Enhanced", "ru");
+        init_prefs(mathml_str, "Enhanced", "ru")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
             let speech = test_command("ZoomIn", mathml, "")?;
             assert_eq!("переход внутрь; в числитель; икс  плюс, квадратный корень из 1 разделить на игрек, конец корня", speech);
-            match do_navigate_command_string(mathml, "DescribeCurrent") {
-                Ok(speech) => {
-                    let speech = speech.trim_end_matches(&[' ', ',', ';']).to_string();
-                    assert_eq!("описать текущее; икс  плюс, квадратный корень из 1 разделить на игрек", speech);
-                },
-                Err(e) => {
-                    panic!("DescribeCurrent failed: {}", crate::interface::errors_to_string(&e));
-                },
-            };
+            let speech = test_command("DescribeCurrent", mathml, "")?;
+            assert_eq!("описать текущее; икс  плюс, квадратный корень из 1 разделить на игрек", speech);
             return Ok( () );
         });
     }
@@ -2634,8 +2623,8 @@ mod tests {
                 <mn>7</mn>
             </mrow>
         </math>";
-        init_default_prefs(mathml_str, "Enhanced");
-        set_preference("SpeechStyle", "SimpleSpeak").unwrap();
+        init_default_prefs(mathml_str, "Enhanced")?;
+        set_preference("SpeechStyle", "SimpleSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2659,8 +2648,8 @@ mod tests {
                 <mi id='id-4'>y</mi>
             </mrow>
             </math>";
-        init_default_prefs(mathml_str, "Simple");
-        set_preference("SpeechStyle", "SimpleSpeak").unwrap();
+        init_default_prefs(mathml_str, "Simple")?;
+        set_preference("SpeechStyle", "SimpleSpeak")?;
         return MATHML_INSTANCE.with(|package_instance| {
             let package_instance = package_instance.borrow();
             let mathml = get_element(&package_instance);
@@ -2698,17 +2687,17 @@ mod tests {
                 </mrow>
             </math>";
         
-        set_rules_dir(super::super::abs_rules_dir_path()).unwrap();
+        set_rules_dir(super::super::abs_rules_dir_path())?;
         for lang in get_supported_languages().unwrap_or_default() {
             test_language(&lang, mathml_str)?;
         }
         return Ok( () );
 
         fn test_language(lang: &str, mathml_str: &str) -> Result<()> {
-            init_default_prefs(mathml_str, "Enhanced");
-            set_preference("Language", lang).unwrap();
+            init_default_prefs(mathml_str, "Enhanced")?;
+            set_preference("Language", lang)?;
 
-            set_preference("NavMode", "Enhanced").unwrap();
+            set_preference("NavMode", "Enhanced")?;
             MATHML_INSTANCE.with(|package_instance| -> Result<()> {
                 let package_instance = package_instance.borrow();
                 let mathml = get_element(&package_instance);
@@ -2721,7 +2710,7 @@ mod tests {
                 return Ok( () );
             })?;
 
-            set_preference("NavMode", "Simple").unwrap();
+            set_preference("NavMode", "Simple")?;
             MATHML_INSTANCE.with(|package_instance: &RefCell<Package>| -> Result<()> {
                 let package_instance = package_instance.borrow();
                 let mathml = get_element(&package_instance);
@@ -2735,7 +2724,7 @@ mod tests {
                 return Ok( () );
             })?;
 
-            set_preference("NavMode", "Character").unwrap();
+            set_preference("NavMode", "Character")?;
             MATHML_INSTANCE.with(|package_instance| -> Result<()> {
                 let package_instance = package_instance.borrow();
                 let mathml = get_element(&package_instance);
@@ -2751,8 +2740,8 @@ mod tests {
             })?;
             
             // simple sanity check that "overview.yaml" doesn't have a syntax error
-            set_preference("Overview", "True").unwrap();
-            set_preference("NavMode", "Character").unwrap();
+            set_preference("Overview", "True")?;
+            set_preference("NavMode", "Character")?;
             MATHML_INSTANCE.with(|package_instance| -> Result<()> {
                 let package_instance = package_instance.borrow();
                 let mathml = get_element(&package_instance);
