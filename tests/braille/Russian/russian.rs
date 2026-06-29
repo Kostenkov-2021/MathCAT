@@ -220,6 +220,25 @@ fn source_gost_numbers_fractions_and_sets() -> Result<()> {
 }
 
 #[test]
+fn source_mixed_numbers_and_periodic_decimals() -> Result<()> {
+    let expr = r#"<math><mn>0,4(71)</mn></math>"#;
+    test_braille("Russian", expr, "⠼⠚⠂⠙⠣⠛⠁⠜")?;
+
+    let expr = r#"<math><mn>1,(523)</mn></math>"#;
+    test_braille("Russian", expr, "⠼⠁⠂⠣⠑⠃⠉⠜")?;
+
+    let expr = r#"<math><mrow><mn>0,4</mn><mo>(</mo><mn>71</mn><mo>)</mo></mrow></math>"#;
+    test_braille("Russian", expr, "⠼⠚⠂⠙⠣⠛⠁⠜")?;
+
+    let expr = r#"<math><mrow><mn>5</mn><mfrac><mn>3</mn><mn>8</mn></mfrac></mrow></math>"#;
+    test_braille("Russian", expr, "⠼⠑⠼⠉⠦")?;
+
+    let expr = r#"<math><mrow><mn>2</mn><mfrac><mrow><mn>24</mn><mo>+</mo><mn>4</mn><mo>-</mo><mn>15</mn></mrow><mn>24</mn></mfrac></mrow></math>"#;
+    test_braille("Russian", expr, "⠼⠃⠐⠆⠼⠃⠙⠀⠖⠼⠙⠀⠤⠼⠁⠑⠀⠳⠼⠃⠙⠰")?;
+    return Ok(());
+}
+
+#[test]
 fn latin_alphabet_indicators() -> Result<()> {
     let expr = r#"<math><mrow><mi>x</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>B</mi><mo>=</mo><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>B</mi></mrow></math>"#;
     test_braille("Russian", expr, "⠠⠭⠀⠖⠨⠁⠀⠖⠠⠽⠀⠖⠨⠃⠀⠶⠠⠭⠀⠖⠽⠀⠖⠨⠁⠀⠖⠃")?;
