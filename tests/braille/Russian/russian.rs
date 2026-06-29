@@ -123,6 +123,19 @@ fn numbers_and_operators() -> Result<()> {
 }
 
 #[test]
+fn source_general_math_text_rules() -> Result<()> {
+    let expr = r#"<math><mrow><mo>&#x2116;</mo><mn>5</mn><mo>,</mo><mo>&#xA7;</mo><mn>2</mn></mrow></math>"#;
+    test_braille("Russian", expr, "⠝⠼⠑⠠⠂⠬⠼⠃")?;
+
+    let expr = r#"<math><mrow><mn>1</mn><mo>+</mo><mn>2</mn><mo>&#x21B5;</mo><mn>3</mn><mo>+</mo><mo>&#x2026;</mo><mo>+</mo><mn>10</mn><mo>&#x23CE;</mo><mo>=</mo><mn>55</mn><mo>.</mo></mrow></math>"#;
+    test_braille("Russian", expr, "⠼⠁⠀⠖⠼⠃⠐⠼⠉⠀⠖⠠⠄⠀⠖⠼⠁⠚⠠⠀⠶⠼⠑⠑⠠⠲")?;
+
+    let expr = r#"<math><mrow><mi>x</mi><mo>&#x2370;</mo><mfrac><mi>y</mi><mn>2</mn></mfrac></mrow></math>"#;
+    test_braille("Russian", expr, "⠠⠭⠐⠽⠳⠆")?;
+    return Ok(());
+}
+
+#[test]
 fn percent_and_special_marks() -> Result<()> {
     let expr = r#"<math><mrow><mn>25</mn><mo>%</mo></mrow></math>"#;
     test_braille("Russian", expr, "⠼⠃⠑⠼⠍⠴")?;
@@ -263,6 +276,9 @@ fn source_mixed_numbers_and_periodic_decimals() -> Result<()> {
 fn latin_alphabet_indicators() -> Result<()> {
     let expr = r#"<math><mrow><mi>x</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>B</mi><mo>=</mo><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>B</mi></mrow></math>"#;
     test_braille("Russian", expr, "⠠⠭⠀⠖⠨⠁⠀⠖⠠⠽⠀⠖⠨⠃⠀⠶⠠⠭⠀⠖⠽⠀⠖⠨⠁⠀⠖⠃")?;
+
+    let expr = r#"<math><mi>MCDLXIV</mi></math>"#;
+    test_braille("Russian", expr, "⠨⠍⠉⠙⠇⠭⠊⠧")?;
     return Ok(());
 }
 
