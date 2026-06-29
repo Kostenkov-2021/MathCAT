@@ -501,6 +501,24 @@ fn source_chemical_reactions_and_charges() -> Result<()> {
 
     let expr = r#"<math><msup><msub><mi>HPO</mi><mn>4</mn></msub><mrow><mo>-</mo><mo>-</mo></mrow></msup></math>"#;
     test_braille("Russian", expr, "⠨⠓⠏⠕⠡⠲⠌⠆⠤")?;
+
+    let expr = r#"<math intent=":chemical-equation"><mrow><mi>CNO</mi></mrow></math>"#;
+    test_braille("Russian", expr, "⠸⠉⠝⠕")?;
+
+    let expr = r#"<math intent=":chemical-equation"><mrow><mi>N</mi><mover><mo>&#x2192;</mo><mn>300</mn></mover><mi>N</mi></mrow></math>"#;
+    test_braille("Russian", expr, "⠨⠝⠀⠒⠕⠨⠌⠼⠉⠚⠚⠱⠨⠝")?;
+
+    let expr = r#"<math intent=":chemical-equation"><mrow><mi>N</mi><munder><mo>&#x2192;</mo><mn>300</mn></munder><mi>N</mi></mrow></math>"#;
+    test_braille("Russian", expr, "⠨⠝⠀⠒⠕⠨⠡⠼⠉⠚⠚⠱⠨⠝")?;
+
+    let expr = r#"<math intent=":chemical-equation"><mrow><mi>N</mi><munderover><mo>&#x2192;</mo><mn>300</mn><mi>Pt</mi></munderover><mi>N</mi></mrow></math>"#;
+    test_braille("Russian", expr, "⠨⠝⠀⠒⠕⠨⠡⠼⠉⠚⠚⠱⠨⠌⠨⠏⠠⠞⠱⠨⠝")?;
+
+    let expr = r#"<math intent=":chemical-equation"><mrow><mi>NaCl</mi><mo>(</mo><mi>aq</mi><mo>)</mo><mo>+</mo><mi>H</mi><mo>(</mo><mi>l</mi><mo>)</mo><mo>+</mo><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></math>"#;
+    test_braille("Russian", expr, "⠨⠝⠠⠁⠨⠉⠠⠇⠣⠁⠟⠜⠀⠖⠨⠓⠣⠠⠇⠜⠀⠖⠨⠉⠣⠠⠎⠜")?;
+
+    let expr = r#"<math intent=":chemical-equation"><mrow><msup><mi>e</mi><mo>+</mo></msup><mo>+</mo><msup><mi>e</mi><mrow><mo>-</mo><mo>-</mo></mrow></msup></mrow></math>"#;
+    test_braille("Russian", expr, "⠠⠑⠌⠖⠀⠖⠑⠌⠆⠤")?;
     return Ok(());
 }
 
