@@ -2390,13 +2390,14 @@ static FRENCH_INDICATOR_REPLACEMENTS: phf::Map<&str, &str> = phf_map! {
     // Keys match indicator chars emitted by French unicode.yaml, unicode-full.yaml, and French_Rules.yaml
     "S" => "XXX",    // sans-serif -- from prefs
     "B" => "⠸",     // bold
-    "𝔹" => "⠨",     // blackboard -- from prefs
+    "𝔹" => "⠨",     // blackboard
     "T" => "⠈",     // script
     "I" => "⠸",     // italic
     "1" => "⠀",     // Grade 1 symbol (used for number followed by a letter)
     "L" => "",     // Letter left in to assist in locating letters
     "D" => "XXX",     // German (Deutsche) -- from prefs
     "G" => "⠘",     // Greek
+    "H" => "⠘⠘",     // Hebrew
     "C" => "⠨",      // capital
     "𝐶" => "⠨",      // capital that never should get whitespace in front (from chemical element)
     "N" => "",     // number indicator
@@ -2543,7 +2544,7 @@ fn letter_or_number_after_b(
 
 fn french_cleanup(_pref_manager: Ref<PreferenceManager>, raw_braille: String) -> String {
     // FIX: need to implement this -- this is just a copy of the Vietnam code
-    static REPLACE_INDICATORS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"([1SB𝔹TILDGC𝐶NWscocbe])").unwrap());
+    static REPLACE_INDICATORS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"([1SB𝔹TILDGHC𝐶NWscocbe])").unwrap());
     debug!("french_cleanup: start={}", raw_braille);
     // let result = typeface_to_word_mode(&raw_braille);
     // let result = capitals_to_word_mode(&result);
