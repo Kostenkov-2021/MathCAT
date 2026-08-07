@@ -251,7 +251,11 @@
         if: "parent::m:mrow/*[self::m:mtable] or (following-sibling::*[1][self::m:mtable] and count(following-sibling::*[1]/*) = 1)"
         then: [t: "⠸⠦"]
         else: [t: "⠨⠦"]   # regular brace
- - "|": [t: "⠿"]                # 0x007C (vertical bar)
+ - "|":                          # 0x007C (vertical bar)
+     - test:
+        if: "parent::m:mrow/*[self::m:mtable]"
+        then: [t: "⠸⠿"]          # multi-line (linear matrix/determinant)
+        else: [t: "⠿"]           # single-line
  - "}":                          # 0x007D (right curly brace))
      - test:
         if: "parent::m:mrow/*[self::m:mtable]"
@@ -285,12 +289,7 @@
         if: "@data-chem-equation-op or ancestor-or-self::*[contains(@intent, ':chemical-equation')]"
         then: [t: "⠘⠱"]
         else: [t: "⠘⠻"]
- - "→":                           # 0x2192 (right pointing arrow)
-     - test:
-        if: "parent::m:mover and not(following-sibling::*)"
-        then: [t: "⠨⠒"]
-        else: [t: "⠸⠱"]
- - "⇀":                           # 0x2192 (right pointing arrow)
+ - "→⇀":                           # 0x2192 (right pointing arrow)
      - test:
         if: "parent::m:mover and not(following-sibling::*)"
         then: [t: "⠨⠒"]
