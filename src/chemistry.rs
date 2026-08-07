@@ -81,10 +81,15 @@ static MERGED_TOKEN: &str = "data-merged";
 /// these can be in the base of an under/over script
 fn is_chem_equation_arrow(ch: char) -> bool {
     matches!(ch,
-        '→' | '➔' | '←' | '⟶' | '⟵' | '⤻' | '⇋' | '⇌' |
+        // reaction arrows
+        '→' | '➔' | '←' | '⟶' | '⟵' | '⤻' | '⇒' | '⇐' | '⟹' | '⟸' |
+        // equilibrium
+        '⇋' | '⇌' | '⇄' | '⇆' | '⥂' | '⥄' | '⥃' |
+        // mesomerism / resonance (left-right)
+        '↔' | '⟷' | '⇔' | '⟺' |
+        // vertical / other chem arrows
         '↑' | '↓' | '↿' | '↾' | '⇃' | '⇂' | '⥮' | '⥯' | '⇷' | '⇸' | '⤉' | '⤈' |
-        '⥂' | '⥄' | '⥃' |
-        '\u{1f8d0}' | '\u{1f8d1}' | '\u{1f8d2}' | '\u{1f8d3}' | '\u{1f8d4}' | '\u{1f8d5}'  // proposed Unicode equilibrium arrows
+        '\u{1f8d0}' | '\u{1f8d1}' | '\u{1f8d2}' | '\u{1f8d3}' | '\u{1f8d4}' | '\u{1f8d5}'  // new Unicode equilibrium arrows
     )
 }
 
@@ -969,7 +974,7 @@ fn likely_chem_subscript(subscript: Element) -> i32 {
         return 0;       // not really much chem info about an integer subscript
     } else if subscript_name == "mi" {
         let text = as_text(subscript);
-        if text == "s" || text == "l" || text == "g" || text == "aq" {
+        if text == "s" || text == "l" || text == "g" || text == "aq" || text == "eau" {
             subscript.set_attribute_value(CHEM_STATE, "true");
             return 2;
         }
@@ -1691,7 +1696,7 @@ fn is_equilibrium_constant(mut mathml: Element) -> bool {
 // All instances seem to be upper case that I've seen.
 static SMALL_UPPER_ROMAN_NUMERAL: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\s*^(IX|IV|V?I{0,3})\s*$").unwrap());
 
-/// look for "(s), "(l)", "(g)", "(aq)" (could also use [...])
+/// look for "(s)", "(l)", "(g)", "(aq)", "(eau)" (could also use [...])
 /// this might be called before canonicalization, but in clean_chemistry_mrow, we made sure "( xxx )" is grouped properly
 pub fn likely_chem_state(mathml: Element) -> i32 {
     
@@ -1701,7 +1706,7 @@ pub fn likely_chem_state(mathml: Element) -> i32 {
         let contents_name = name(contents);
         if contents_name == "mi" || contents_name == "mtext" {
             let text = as_text(contents);
-            if text == "s" || text == "l" ||text == "g" ||text == "aq" {
+            if text == "s" || text == "l" || text == "g" || text == "aq" || text == "eau" {
                 return text.len() as i32 + 1;       // hack to count chars -- works because all are ASCII 
             };
         }
