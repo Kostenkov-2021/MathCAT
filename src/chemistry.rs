@@ -1020,6 +1020,10 @@ fn likely_chem_superscript(sup: Element) -> i32 {
         sup.set_attribute_value("data-number", small_roman_to_number(as_str!(as_text(sup))));
         sup.set_attribute_value(MAYBE_CHEMISTRY, "2");
         return 2;
+    } else if sup_name == "mo" && !as_text(sup).is_empty() && as_str!(as_text(sup)).trim_matches(['\'', '′', '″', '‴']).is_empty() {
+        // primes distinguish generic groups (R, R', R'') -- neutral: don't add or rule out chemistry
+        sup.set_attribute_value(MAYBE_CHEMISTRY, "0");
+        return 0;
     } else if sup_name == "mrow" {
         // look for something like '2+'
         let children = sup.children();
