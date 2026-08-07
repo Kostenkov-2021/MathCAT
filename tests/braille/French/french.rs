@@ -467,15 +467,16 @@ fn restriction_of_f_to_13_2_04() -> Result<()> {
     return Ok(());
 }
 
-// #[test]
-// fn determinant_tabular_13_3_01() -> Result<()> {
-//     let expr= r#"<math><mrow><mi>I</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">|</mo><mtable>
-//                  <mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr>
-//                  <mtr><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>3</mn></mtd></mtr>
-//                  </mtable><mo stretchy="true" form="postfix">|</mo></mrow><mo>=</mo><mn>3</mn></mrow></math>"#;
-//     test_braille("French", expr, "not correct⠨⠊⠶⠿⠡⠀⠼⠿   ⠿⠣⠀⠩⠿⠶⠩")?;
-//     return Ok(());
-// }
+#[test]
+fn determinant_tabular_13_3_01() -> Result<()> {
+    let expr= r#"<math><mrow><mi>I</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">|</mo><mtable>
+                 <mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr>
+                 <mtr><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>3</mn></mtd></mtr>
+                 </mtable><mo stretchy="true" form="postfix">|</mo></mrow><mo>=</mo><mn>3</mn></mrow></math>"#;
+    test_braille("French", expr, "⠨⠊⠶⠸⠿⠡⠀⠼⠀⠠⠜⠀⠣⠀⠩⠸⠿⠶⠩")?;
+    return Ok(());
+}
+
 #[test]
 fn matrix_linear_13_3_02() -> Result<()> {
     let expr= r#"<math><mrow><mi>J</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo>
