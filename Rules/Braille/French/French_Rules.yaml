@@ -125,22 +125,24 @@
   name: default
   tag: [mtr, mlabeledtr]
   match: "."
+  # When an mtable is used in a script position (e.g. stacked lim conditions), §14.2
+  # joins rows with a comma (⠂) rather than the matrix row-change (⠠⠜).
+  variables:
+  - InScriptPosition: "parent::m:mtable[preceding-sibling::* and IsNode(.., 'modified')]"
   replace:
   - test: 
       if: "preceding-sibling::*"
-      then: [t: "W⠠⠜W"]
-   
-  #  - test:
-  #     if: .[self::m:mlabeledtr]
-  #     then:
-  #        - t: "⠗⠕⠺W⠇⠁⠃⠑⠇⠸⠒"  # "row label:"
-  #        - x: "*[1]/*"           # contents of row label
+      then:
+        - test:
+            if: "$InScriptPosition"
+            then: [t: "⠂"]       # comma between script-position rows
+            else: [t: "W⠠⠜W"]  # matrix/system row change
   - test:
       if: .[self::m:mlabeledtr]
       then: [x: "*[position()>1]"]
       else: {x: "*"}
   - test:
-      if: "following-sibling::* "
+      if: "following-sibling::* and not($InScriptPosition)"
       then: [t: "W"]
 
 -
@@ -426,6 +428,34 @@
   replace:
   - x: "*[2]"
   - x: "*[1]"
+
+-
+  # Nested munder/mover for lim / large operators (§14.2): join the two script
+  # conditions with a comma (⠂), like script-position mtables — one script
+  # indicator and one block around both conditions.
+  name: nested-lim-or-largeop-conditions
+  tag: [munder, mover]
+  match: "((self::m:munder and *[1][self::m:munder]) or (self::m:mover and *[1][self::m:mover])) and
+          *[1]/*[1][IsInDefinition(., 'Braille', 'LargeOperators') or .='lim' or .='Lim']"
+  replace:
+  - t: "b"
+  - test:
+      if: "NeedsToBeGrouped(*[1]/*[1], 'French', true())"
+      then:
+      - t: "o"
+      - x: "*[1]/*[1]"
+      - t: "c"
+      else: [x: "*[1]/*[1]"]
+  - test:
+      - if: "self::m:munder"
+        then: [t: "⠢⠢"]
+        else: [t: "⠈⠈"]
+  - t: "o"
+  - x: "*[1]/*[2]"
+  - t: "⠂"
+  - x: "*[2]"
+  - t: "c"
+  - t: "e"
 
 -
    name: default
