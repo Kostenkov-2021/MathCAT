@@ -369,8 +369,17 @@ fn square_formula_3_10_05() -> Result<()> {
 
 #[test]
 fn function_from_r_to_r_11_01() -> Result<()> {
-    let expr= r#"<math><mrow><mi>f</mi><mo>:</mo><mi>ℝ</mi><mo>→</mo><mrow><mi>ℝ</mi><mo>,</mo><mspace width="0.222em"/></mrow><mspace width="0.222em"/><mi>x</mi><mo>↦</mo><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></mrow></math>"#;
-    test_braille("French", expr, "⠋⠒⠨⠨⠗⠸⠱⠨⠨⠗⠭⠐⠱⠽⠶⠡⠌⠭")?;
+    // Spec §11 example, first line: f : ℝ → ℝ
+    let expr= r#"<math><mrow><mi>f</mi><mo>:</mo><mi>ℝ</mi><mo>→</mo><mi>ℝ</mi></mrow></math>"#;
+    test_braille("French", expr, "⠋⠒⠨⠨⠗⠸⠱⠨⠨⠗")?;
+    return Ok(());
+}
+
+#[test]
+fn maps_to_y_equals_1_over_x_11_02() -> Result<()> {
+    // Spec §11 example, second line: x ↦ y = 1/x
+    let expr= r#"<math><mrow><mi>x</mi><mo>↦</mo><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></mrow></math>"#;
+    test_braille("French", expr, "⠭⠐⠱⠽⠶⠡⠌⠭")?;
     return Ok(());
 }
 
@@ -460,25 +469,39 @@ fn restriction_of_f_to_13_2_04() -> Result<()> {
 
 // #[test]
 // fn determinant_tabular_13_3_01() -> Result<()> {
-//     let expr= r#"<math><mrow><mi>I</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">|</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>3</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">|</mo></mrow><mo>=</mo><mn>3</mn></mrow></math>"#;
+//     let expr= r#"<math><mrow><mi>I</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">|</mo><mtable>
+//                  <mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr>
+//                  <mtr><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>3</mn></mtd></mtr>
+//                  </mtable><mo stretchy="true" form="postfix">|</mo></mrow><mo>=</mo><mn>3</mn></mrow></math>"#;
 //     test_braille("French", expr, "not correct⠨⠊⠶⠿⠡⠀⠼⠿   ⠿⠣⠀⠩⠿⠶⠩")?;
 //     return Ok(());
 // }
 #[test]
 fn matrix_linear_13_3_02() -> Result<()> {
-    let expr= r#"<math><mrow><mi>J</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mn>4</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>3</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>5</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>6</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mo>−</mo><mn>7</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>8</mn></mtd><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mn>9</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mrow></math>"#;
+    let expr= r#"<math><mrow><mi>J</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo>
+    <mtable>
+      <mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mn>4</mn></mtd></mtr>
+      <mtr><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>3</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>5</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>6</mn></mtd></mtr>
+      <mtr><mtd columnalign="center" style="text-align: center"><mo>−</mo><mn>7</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>8</mn></mtd><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mn>9</mn></mtd></mtr>
+    </mtable><mo stretchy="true" form="postfix">)</mo></mrow></mrow></math>"#;
     test_braille("French", expr, "⠨⠚⠶⠘⠦⠡⠀⠐⠂⠀⠐⠂⠀⠹⠀⠠⠜⠀⠣⠀⠩⠀⠱⠀⠫⠀⠠⠜⠀⠤⠻⠀⠳⠀⠐⠂⠀⠪⠘⠴")?;
     return Ok(());
 }
 #[test]
 fn matrix_with_equations_one_lines_13_3_03() -> Result<()> {
-    let expr= r#"<math><mrow><mi>K</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>3</mn><mi>x</mi><mo>−</mo><mn>9</mn></mrow><mrow><mn>6</mn><msup><mi>x</mi><mn>3</mn></msup><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></mrow></mfrac></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mfrac><mrow><mi>x</mi><mo>+</mo><mn>3</mn></mrow><mrow><mi>y</mi><mo>+</mo><mn>5</mn></mrow></mfrac></mtd><mtd columnalign="center" style="text-align: center"><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow></mrow></math>"#;
+    let expr= r#"<math><mrow><mi>K</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable>
+        <mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>3</mn><mi>x</mi><mo>−</mo><mn>9</mn></mrow><mrow><mn>6</mn><msup><mi>x</mi><mn>3</mn></msup><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></mrow></mfrac></mtd></mtr>
+        <mtr><mtd columnalign="center" style="text-align: center"><mfrac><mrow><mi>x</mi><mo>+</mo><mn>3</mn></mrow><mrow><mi>y</mi><mo>+</mo><mn>5</mn></mrow></mfrac></mtd><mtd columnalign="center" style="text-align: center"><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr>
+        </mtable><mo stretchy="true" form="postfix">]</mo></mrow></mrow></math>"#;
     test_braille("French", expr, "⠨⠅⠶⠘⠷⠡⠀⠰⠭⠈⠣⠖⠩⠭⠤⠪⠆⠌⠰⠫⠭⠈⠩⠤⠭⠈⠣⠖⠡⠆⠀⠠⠜⠀⠰⠭⠖⠩⠆⠌⠰⠽⠖⠱⠆⠀⠛⠦⠭⠴⠘⠾")?;
     return Ok(());
 }
 #[test]
 fn sytem_equation_linéaraire_13_4_01() -> Result<()> {
-    let expr= r#"<math><mrow><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="right" style="text-align: right"><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>y</mi><mo>=</mo><mn>5</mn></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><mn>3</mn><mi>x</mi><mo>−</mo><mn>7</mn><mi>y</mi><mo>=</mo><mn>8</mn></mtd></mtr></mtable></mrow><mspace width="0.222em"></mspace></mrow></math>"#;
+    let expr= r#"<math><mrow><mrow><mo stretchy="true" form="prefix">{</mo><mtable>
+    <mtr><mtd columnalign="right" style="text-align: right"><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>y</mi><mo>=</mo><mn>5</mn></mtd></mtr>
+    <mtr><mtd columnalign="right" style="text-align: right"><mn>3</mn><mi>x</mi><mo>−</mo><mn>7</mn><mi>y</mi><mo>=</mo><mn>8</mn></mtd></mtr>
+    </mtable></mrow><mspace width="0.222em"></mspace></mrow></math>"#;
     test_braille("French", expr, "⠸⠦⠣⠭⠖⠩⠽⠶⠱⠀⠠⠜⠀⠩⠭⠤⠻⠽⠶⠳")?;
     return Ok(());
 }
@@ -519,7 +542,10 @@ fn limit_x_tends_1_14_2_01_corrected() -> Result<()> {
 
 #[test]
 fn limit_x_tends_and_x_lt_1_14_2_02_corrected_1() -> Result<()> {
-    let expr= r#"<math><mrow><munder><mi>lim</mi><mtable><mtr><mtd columnalign="right" style="text-align: right"><mi>x</mi><mo>→</mo><mn>4</mn></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><mi>x</mi><mo>&gt;</mo><mn>4</mn></mtd></mtr></mtable></munder><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mi>−</mi><mi>∞</mi></mrow></math>"#;
+    let expr= r#"<math><mrow><munder><mi>lim</mi><mtable>
+       <mtr><mtd columnalign="right" style="text-align: right"><mi>x</mi><mo>→</mo><mn>4</mn></mtd></mtr>
+       <mtr><mtd columnalign="right" style="text-align: right"><mi>x</mi><mo>&gt;</mo><mn>4</mn></mtd></mtr>
+       </mtable></munder><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mi>−</mi><mi>∞</mi></mrow></math>"#;
     test_braille("French", expr, "⠇⠊⠍⠢⠢⠰⠭⠸⠱⠹⠂⠭⠐⠜⠹⠆⠋⠦⠭⠴⠶⠤⠘⠉")?;
     return Ok(());
 }
@@ -594,8 +620,12 @@ fn integral_over_curve_14_4_04() -> Result<()> {
 
 #[test]
 fn integral_double_over_surface_14_4_05() -> Result<()> {
-    let expr= r#"<math><mrow><msubsup><mo>∯</mo><mi>S</mi><mrow></mrow></msubsup><mrow><mspace width="0.27em"></mspace><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo><mi>d</mi><mi>x</mi><mi>d</mi><mi>y</mi></mrow></mrow></math>"#;
-    test_braille("French", expr, "⠨⠯⠯⠢⠨⠎⠋⠦⠭⠂⠽⠴⠙⠭⠙⠽")?;
+    let expr= r#"<math><mrow><msubsup><mo>∯</mo><mi>S</mi><mrow></mrow></msubsup><mrow><mspace width="0.27em"></mspace>
+        <mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo><mi>d</mi><mi>x</mi><mi>d</mi><mi>y</mi></mrow></mrow></math>"#;
+    // The original expr doesn't bracket bracket the integral, but other similar cases do bracket an exponent that is followed by a char
+    // I was told that leaning towards disambiguation is better, and was told MathCAT's version was OK
+    // test_braille("French", expr, "⠨⠯⠯⠢⠨⠎⠋⠦⠭⠂⠽⠴⠙⠭⠙⠽")?;
+    test_braille("French", expr, "⠰⠨⠯⠯⠢⠨⠎⠆⠋⠦⠭⠂⠽⠴⠙⠭⠙⠽")?;
     return Ok(());
 }
 
@@ -633,8 +663,18 @@ fn cos_of_sum_2_14_6_01b() -> Result<()> {
     test_braille_prefs("French", vec![("French_UseShortForm", "true")], expr, "⠨⠬⠦⠁⠖⠃⠴⠶⠨⠬⠁⠨⠬⠃⠤⠬⠁⠬⠃")?;
     return Ok(());
 }
+
 #[test]
 fn cosh_sinh_14_7_01() -> Result<()> {
+    let expr= r#"<math><mrow><msup><mrow><mi>ch</mi></mrow><mn>2</mn></msup><mi>x</mi><mo>−</mo><msup><mrow><mi>sh</mi></mrow><mn>2</mn></msup><mi>x</mi><mo>=</mo><mn>1</mn></mrow></math>"#;
+    test_braille_prefs("French", vec![("French_UseShortForm", "true")], expr, "⠉⠓⠈⠣⠰⠭⠆⠤⠎⠓⠈⠣⠰⠭⠆⠶⠡")?;
+
+    return Ok(());
+}
+
+
+#[test]
+fn cosh_sinh_14_7_01_fullname() -> Result<()> {
     let expr= r#"<math><mrow><msup><mrow><mi>cosh</mi></mrow><mn>2</mn></msup><mi>x</mi><mo>−</mo><msup><mrow><mi>sinh</mi></mrow><mn>2</mn></msup><mi>x</mi><mo>=</mo><mn>1</mn></mrow></math>"#;
     test_braille_prefs("French", vec![("French_UseShortForm", "true")], expr, "⠉⠓⠈⠣⠰⠭⠆⠤⠎⠓⠈⠣⠰⠭⠆⠶⠡")?;
 
@@ -650,10 +690,215 @@ fn exists_element_of_15_01() -> Result<()> {
 
 #[test]
 fn set_formula_15_02() -> Result<()> {
-    let expr= r#"<math><mrow><mo>∀</mo><mi>ε</mi><mo>&gt;</mo><mn>0</mn><mspace width="0.40em"></mspace><mo>∃</mo><mi>η</mi><mo>&gt;</mo><mn>0</mn><mspace width="0.167em"></mspace><mo>:</mo><mspace width="0.40em"></mspace><mrow><mo stretchy="true" form="prefix">|</mo><msub><mi>x</mi><mn>2</mn></msub><mo>−</mo><msub><mi>x</mi><mn>1</mn></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>≤</mo><mi>η</mi><mspace width="0.40em"></mspace><mo>⇒</mo><mspace width="0.40em"></mspace><mrow><mo stretchy="true" form="prefix">|</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mn>2</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mn>1</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">|</mo></mrow><mo>≤</mo><mi>ε</mi></mrow></math>"#;
+    let expr= r#"<math><mrow><mo>∀</mo><mi>ε</mi><mo>&gt;</mo><mn>0</mn><mspace width="0.40em"></mspace><mo>∃</mo>
+                        <mi>η</mi><mo>&gt;</mo><mn>0</mn><mspace width="0.167em"></mspace><mo>:</mo><mspace width="0.40em"></mspace>
+                        <mrow><mo stretchy="true" form="prefix">|</mo><msub><mi>x</mi><mn>2</mn></msub><mo>−</mo><msub><mi>x</mi><mn>1</mn></msub><mo stretchy="true" form="postfix">|</mo></mrow>
+                        <mo>≤</mo><mi>η</mi><mspace width="0.40em"></mspace><mo>⇒</mo><mspace width="0.40em"></mspace>
+                        <mrow><mo stretchy="true" form="prefix">|</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mn>2</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow>
+                        <mo>−</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mn>1</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow>
+                        <mo stretchy="true" form="postfix">|</mo></mrow><mo>≤</mo><mi>ε</mi></mrow></math>"#;
     test_braille("French", expr, "⠸⠌⠘⠑⠐⠜⠼⠀⠸⠡⠘⠓⠐⠜⠼⠒⠀⠿⠭⠢⠣⠤⠭⠢⠡⠿⠘⠣⠘⠓⠀⠒⠂⠀⠿⠋⠦⠭⠢⠣⠴⠤⠋⠦⠭⠢⠡⠴⠿⠘⠣⠘⠑")?;
     return Ok(());
 }
+
+#[test]
+fn set_formula_15_02_from_word() -> Result<()> {
+    // Note: orginal used U+2008 (punctuation space) before ":" which triggers whitespace in the output
+    // If looks wrong also. Switched to U+2009 (thin space)
+    let expr= r#"<math>
+            <mo>∀</mo>
+            <mi>ε</mi>
+            <mo>&gt;</mo>
+            <mn>0</mn>
+            <mi> </mi>
+            <mo>∃</mo>
+            <mi>η</mi>
+            <mo>&gt;</mo>
+            <mn>0</mn>
+            <mi> </mi>
+            <mo>:</mo>
+            <mi> </mi>
+            <mrow>
+                <mo>|</mo>
+                <mrow>
+                    <msub><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msub>
+                    <mo>-</mo>
+                    <msub><mrow><mi>x</mi></mrow><mrow><mn>1</mn></mrow></msub>
+                </mrow>
+                <mo>|</mo>
+            </mrow>
+            <mo>≤</mo>
+            <mi>η</mi>
+            <mi> </mi>
+            <mo>⟹</mo>
+            <mi> </mi>
+            <mrow>
+                <mo>|</mo>
+                <mrow>
+                    <mi>f</mi>
+                    <mrow>
+                        <mo>(</mo>
+                        <mrow>
+                            <msub><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msub>
+                        </mrow>
+                        <mo>)</mo>
+                    </mrow>
+                    <mo>-</mo>
+                    <mi>f</mi>
+                    <mrow>
+                        <mo>(</mo>
+                        <mrow>
+                            <msub><mrow><mi>x</mi></mrow><mrow><mn>1</mn></mrow></msub>
+                        </mrow>
+                        <mo>)</mo>
+                    </mrow>
+                </mrow>
+                <mo>|</mo>
+            </mrow>
+            <mo>≤</mo>
+            <mi>ε</mi>
+        </math>"#;
+    test_braille("French", expr, "⠸⠌⠘⠑⠐⠜⠼⠀⠸⠡⠘⠓⠐⠜⠼⠒⠀⠿⠭⠢⠣⠤⠭⠢⠡⠿⠘⠣⠘⠓⠀⠒⠂⠀⠿⠋⠦⠭⠢⠣⠴⠤⠋⠦⠭⠢⠡⠴⠿⠘⠣⠘⠑")?;
+    return Ok(());
+}
+
+// --- 16.3 Unités (braille intégral) ---
+// Spec also lists braille abrégé (letter indicator ⠠ before unit abbreviations after numbers);
+// MathCAT emits intégral math braille only.
+
+#[test]
+fn units_5_3_km_16_3_01() -> Result<()> {
+    let expr = r#"<math><mn>5,3</mn><mtext>&#xA0;</mtext><mi>km</mi></math>"#;
+    test_braille("French", expr, "⠱⠂⠩⠀⠅⠍")?;
+    return Ok(());
+}
+
+#[test]
+fn units_3_40_euro_16_3_02() -> Result<()> {
+    let expr = r#"<math><mn>3,40</mn><mtext>&#xA0;</mtext><mo>€</mo></math>"#;
+    test_braille("French", expr, "⠩⠂⠹⠼⠀⠘⠑")?;
+    return Ok(());
+}
+
+#[test]
+fn units_1_5_kW_16_3_03() -> Result<()> {
+    let expr = r#"<math><mn>1,5</mn><mtext>&#xA0;</mtext><mi>kW</mi></math>"#;
+    test_braille("French", expr, "⠡⠂⠱⠀⠅⠨⠺")?;
+    return Ok(());
+}
+
+#[test]
+fn units_220_V_16_3_04() -> Result<()> {
+    let expr = r#"<math><mn>220</mn><mtext>&#xA0;</mtext><mi mathvariant="normal">V</mi></math>"#;
+    test_braille("French", expr, "⠣⠣⠼⠀⠨⠧")?;
+    return Ok(());
+}
+
+#[test]
+fn units_67_km2_16_3_05() -> Result<()> {
+    let expr = r#"<math><mn>67</mn><mtext>&#xA0;</mtext><msup><mi>km</mi><mn>2</mn></msup></math>"#;
+    test_braille("French", expr, "⠫⠻⠀⠅⠍⠈⠣")?;
+    return Ok(());
+}
+
+#[test]
+fn units_37_deg_16_3_06() -> Result<()> {
+    // Degree is attached to the number (no space), as in print
+    let expr = r#"<math><mn>37</mn><mo>°</mo></math>"#;
+    test_braille("French", expr, "⠩⠻⠐⠕")?;
+    return Ok(());
+}
+
+#[test]
+fn units_dms_16_3_07() -> Result<()> {
+    // 45° 25′ 12″ — spaces between degree/minute/second groups
+    let expr = r#"<math>
+        <mn>45</mn><mo>°</mo><mtext>&#xA0;</mtext>
+        <mn>25</mn><mo>′</mo><mtext>&#xA0;</mtext>
+        <mn>12</mn><mo>″</mo>
+    </math>"#;
+    test_braille("French", expr, "⠹⠱⠐⠕⠀⠣⠱⠄⠀⠡⠣⠄⠄")?;
+    return Ok(());
+}
+
+#[test]
+fn units_0_degC_16_3_08() -> Result<()> {
+    let expr = r#"<math><mn>0</mn><mtext>&#xA0;</mtext><mi>℃</mi></math>"#;
+    test_braille("French", expr, "⠼⠀⠐⠕⠨⠉")?;
+    return Ok(());
+}
+
+#[test]
+fn units_50_km_h_16_3_09() -> Result<()> {
+    let expr = r#"<math><mn>50</mn><mtext>&#xA0;</mtext><mi>km</mi><mo>/</mo><mi>h</mi></math>"#;
+    test_braille("French", expr, "⠱⠼⠀⠅⠍⠌⠓")?;
+    return Ok(());
+}
+
+#[test]
+fn units_3_4_m_s_16_3_10() -> Result<()> {
+    // 3,4 m·s⁻¹
+    let expr = r#"<math>
+        <mn>3,4</mn><mtext>&#xA0;</mtext>
+        <mi>m</mi><mo>×</mo><msup><mi>s</mi><mrow><mo>-</mo><mn>1</mn></mrow></msup>
+    </math>"#;
+    test_braille("French", expr, "⠩⠂⠹⠀⠍⠔⠎⠈⠤⠡")?;
+    return Ok(());
+}
+
+#[test]
+fn units_2h35min15s_16_3_11() -> Result<()> {
+    let expr = r#"<math>
+        <mn>2</mn><mtext>&#xA0;</mtext><mi>h</mi><mtext>&#xA0;</mtext>
+        <mn>35</mn><mtext>&#xA0;</mtext><mi>min</mi><mtext>&#xA0;</mtext>
+        <mn>15</mn><mtext>&#xA0;</mtext><mi>s</mi>
+    </math>"#;
+    test_braille("French", expr, "⠣⠀⠓⠀⠩⠱⠀⠍⠊⠝⠀⠡⠱⠀⠎")?;
+    return Ok(());
+}
+
+#[test]
+fn units_7_L_16_3_12() -> Result<()> {
+    let expr = r#"<math><mn>7</mn><mtext>&#xA0;</mtext><mi mathvariant="normal">L</mi></math>"#;
+    test_braille("French", expr, "⠻⠀⠨⠇")?;
+    return Ok(());
+}
+
+#[test]
+fn units_50_cL_16_3_13() -> Result<()> {
+    let expr = r#"<math><mn>50</mn><mtext>&#xA0;</mtext><mi>cL</mi></math>"#;
+    test_braille("French", expr, "⠱⠼⠀⠉⠨⠇")?;
+    return Ok(());
+}
+
+#[test]
+fn units_4_MHz_16_3_14() -> Result<()> {
+    let expr = r#"<math><mn>4</mn><mtext>&#xA0;</mtext><mi>MHz</mi></math>"#;
+    test_braille("French", expr, "⠹⠀⠨⠍⠨⠓⠵")?;
+    return Ok(());
+}
+
+#[test]
+fn units_6_ohm_16_3_15() -> Result<()> {
+    let expr = r#"<math><mn>6</mn><mtext>&#xA0;</mtext><mi mathvariant="normal">Ω</mi></math>"#;
+    test_braille("French", expr, "⠫⠀⠨⠘⠺")?;
+    return Ok(());
+}
+
+#[test]
+fn units_5_uV_16_3_16() -> Result<()> {
+    let expr = r#"<math><mn>5</mn><mtext>&#xA0;</mtext><mi>μV</mi></math>"#;
+    test_braille("French", expr, "⠱⠀⠘⠍⠨⠧")?;
+    return Ok(());
+}
+
+#[test]
+fn units_9_angstrom_16_3_17() -> Result<()> {
+    let expr = r#"<math><mn>9</mn><mtext>&#xA0;</mtext><mi mathvariant="normal">Å</mi></math>"#;
+    test_braille("French", expr, "⠪⠀⠨⠁⠈⠕")?;
+    return Ok(());
+}
+
 #[test]
 fn power_ordinal_a_16_4_07() -> Result<()> {
     let expr= r#"<math><mrow><mo stretchy="false">(</mo><mi>p</mi><mo>+</mo><mi>q</mi><msup><mo stretchy="false">)</mo><mrow><mi>i</mi><mi>è</mi><mi>m</mi><mi>e</mi></mrow></msup></mrow></math>"#;

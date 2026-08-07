@@ -231,7 +231,7 @@
  - "8": [t: "N⠳"]                # 0x0038 (digit eight)
  - "9": [t: "N⠪"]                # 0x0039 (digit nine)
  - ":": [t: "⠒"]                # 0x003A (colon)
- - ";": [t: "⠆"]                # 0x003B (semicolon)
+ - ";": [t: ";"]                # 0x003B (semicolon)
  - "<": [t: "⠐⠣"]                # 0x003C (less than sign)
  - "=": [t: "⠶"]                # 0x003D (regular equals sign)
  - ">": [t: "⠐⠜"]                # 0x003E (greater than sign ( regular ))
@@ -262,15 +262,14 @@
  - "¢": [t: "⠉"]                # 0x00A2 (cent)
  - "¯": [t: "⠸⠒"]                # 0x00AF (bar)
  - "°": [t: "⠐⠕"]                # 0x00B0 (degree sign)
+ - "℃": [t: "⠐⠕⠨⠉"]              # 0x2103 (degree Celsius)
+ - "℉": [t: "⠐⠕⠨⠋"]              # 0x2109 (degree Fahrenheit)
  - "±": [t: "⠖⠤"]                # 0x00B1 (plus or minus)
  - "¼": [t: "⠡⠌⠹"]                # 0x00BC (vulgar fraction one quarter)
  - "½": [t: "⠡⠌⠣"]                # 0x00BD (vulgar fraction one half)
  - "¾": [t: "⠩⠌⠹"]                # 0x00BE (vulgar fraction three quarters)
  - "×": [t: "⠔"]                # 0x00D7 (  multiplication sign)
  - "÷": [t: "⠒"]                # 0x00F7 (division sign ( divided by ))
- - "ב": [t: "⠘⠘⠃"]                # 0x05D1 (  beth)
- - "ג": [t: "⠘⠘⠛"]                # 0x05D2 (gimel)
- - "ד": [t: "⠘⠘⠙"]                # 0x05D3 (daleth)
  - "◌̌": [t: "⠸⠘⠒"]                # 0x030C (combing caron)
  - "‖": [t: "⠘⠿"]                # 0x2016 (double vertical bar)
  - "‰": [t: "⠐⠬⠬"]                # 0x2030 (per mille sign)
@@ -279,9 +278,13 @@
  - "‴": [t: "⠄⠄⠄"]                # 0x2034 (triple prime)
  - "€": [t: "⠘⠑"]                # 0x20AC (euro)
  - "Å": [t: "⠨⠁⠈⠕"]                # 0x212B (angstrom)
- - "ℵ": [t: "⠘⠘⠁"]                # 0x2135 (alef)
+ - "ℵ": [t: "HL⠁"]               # 0x2135 (alef)
  - "←": [t: "⠸⠪"]                # 0x2190 (left pointing arrow)
- - "↑": [t: "⠘⠻"]                # 0x2191 (arrow pointing up)
+ - "↑":                          # 0x2191 (arrow pointing up)
+    - test:
+        if: "@data-chem-equation-op or ancestor-or-self::*[contains(@intent, ':chemical-equation')]"
+        then: [t: "⠘⠱"]
+        else: [t: "⠘⠻"]
  - "→":                           # 0x2192 (right pointing arrow)
      - test:
         if: "parent::m:mover and not(following-sibling::*)"
@@ -292,8 +295,11 @@
         if: "parent::m:mover and not(following-sibling::*)"
         then: [t: "⠨⠒"]
         else: [t: "⠸⠱"]
-
- - "↓": [t: "⠨⠻"]                # 0x2193 (arrow pointing down)
+ - "↓":                           # 0x2193 (arrow pointing down)
+    - test:
+        if: "@data-chem-equation-op or ancestor-or-self::*[contains(@intent, ':chemical-equation')]"
+        then: [t: "⠨⠱"]
+        else: [t: "⠨⠻"]
  - "↔": [t: "⠐⠻"]                # 0x2194 (horizontal two-way arrow)
  - "↖": [t: "⠘⠪"]                # 0x2196 (north west arrow)
  - "↗": [t: "⠘⠱"]                # 0x2197 (north east arrow)
@@ -340,7 +346,12 @@
  - "≈": [t: "⠐⠶"]                # 0x2248 (double tilde)
  - "≙": [t: "⠒⠶"]                # 0x2259 (caret over equals sign)
  - "≠": [t: "⠨⠶"]                # 0x2260 (not equal to)
- - "≡": [t: "⠶⠶"]                # 0x2261 (identify (is congruent to, is identical with))
+ - "≡":                           # 0x2261 (identify (is congruent to, is identical with))
+     - test:
+        if: "@data-chemical-bond"
+        then: [t: "⠿"]
+        else: [t: "⠶⠶"]
+
  - "≢": [t: "⠨⠶⠶"]                # 0x2262 (is not identical to)
  - "≤": [t: "⠘⠣"]                # 0x2264 (bar under less than sign (is less than or equal to))
  - "≥": [t: "⠘⠜"]                # 0x2265 (bar under greater than sign (is greater than or equal to))
@@ -360,6 +371,17 @@
  - "⊗": [t: "⠨⠔"]                # 0x2297 (circle with interior cross (tensor product))
  - "⊥": [t: "⠘⠳"]                # 0x22A5 (is perpendicular to)
  - "⋅": [t: "⠔⠔"]                 # 0x22C5 (dot,and times)
+ - "⟵": [t: "⠸⠪"]               # 0x27F5 (Long leftwards arrow )
+ - "⟶":                          # 0x27F6 (Long rightwards arrow)
+     - test:
+        if: "parent::m:mover and not(following-sibling::*)"
+        then: [t: "⠨⠒"]
+        else: [t: "⠸⠱"]
+ - "⟷": [t: "⠸⠻"]              # 0x27F7 (Long left right arrow)
+ - "⟸": [t: "⠐⠒"]              # 0x27F8 (Long leftwards arrow )
+ - "⟹": [t: "⠒⠂"]              # 0x27F9 (Long rightwards arrow)
+ - "⟺": [t: "⠐⠒⠂"]             # 0x27FA (Long left right arrow)
+
  - "⌄": [t: "⠸⠘⠒"]                # 0x2304 (inverted caret)
  - "⌣": [t: "⠈⠈⠈"]               # 0x2323 (smile)
  - "⏜": [t: "⠈⠒"]                # 0x23DC (arc concave upward)

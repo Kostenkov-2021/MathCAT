@@ -21,7 +21,9 @@
   #  ⠘ -> \ue003
       "sin": "\ue000", "cos": "\ue001\ue000", "tan": "\ue002", "cotan": "\ue001\ue002",
       "arcsin": "\ue003\ue000", "arccos": "\ue003\ue001\ue002", "arctan": "\ue003\ue002", "arccotan": "\ue003\ue001\ue002",
-      
+  }
+
+- ShortFormAbbreviations: {
       "cosh": "ch", "sinh": "sh", "tanh": "th", "coth": "coth",
       "arsinh": "argsh", "arcosh": "argch", "artanh": "argth", "arcoth": "argcoth",
   }
