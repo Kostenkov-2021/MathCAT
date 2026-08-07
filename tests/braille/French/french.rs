@@ -553,7 +553,11 @@ fn limit_x_tends_and_x_lt_1_14_2_02_corrected_1() -> Result<()> {
 
 #[test]
 fn limit_x_tends_and_x_lt_2_14_2_02_corrected_2() -> Result<()> {
-    let expr= r#"<math><mrow><munder><munder><mi>lim</mi><mrow><mi>x</mi><mo>→</mo><mn>4</mn></mrow></munder><mrow><mi>x</mi><mo>&gt;</mo><mn>4</mn></mrow></munder><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mi>−</mi><mi>∞</mi></mrow></math>"#;
+    let expr= r#"<math><mrow><munder>
+        <munder><mi>lim</mi><mrow><mi>x</mi><mo>→</mo><mn>4</mn></mrow></munder>
+        <mrow><mi>x</mi><mo>&gt;</mo><mn>4</mn></mrow>
+        </munder>
+        <mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mi>−</mi><mi>∞</mi></mrow></math>"#;
     test_braille("French", expr, "⠇⠊⠍⠢⠢⠰⠭⠸⠱⠹⠂⠭⠐⠜⠹⠆⠋⠦⠭⠴⠶⠤⠘⠉")?;
     return Ok(());
 }
