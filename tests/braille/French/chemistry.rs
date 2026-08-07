@@ -197,7 +197,7 @@ fn reaction_III_2_2() -> Result<()> {
 #[test]
 fn reaction_III_2_3() -> Result<()> {
     // HCl(g)+H₂O(l)→(eau) H₃O⁺(aq)+Cl⁻(aq) — line-continuation ⠐ omitted
-    let expr = r#"<math intent=':chemical-equation'>
+    let expr = r#"<math>
         <mi>HCl</mi><mo>(</mo><mi mathvariant="normal">g</mi><mo>)</mo>
         <mo>+</mo>
         <msub><mi mathvariant="normal">H</mi><mn>2</mn></msub><mi mathvariant="normal">O</mi><mo>(</mo><mi mathvariant="normal">l</mi><mo>)</mo>
@@ -327,7 +327,7 @@ fn redox_IV_1_3() -> Result<()> {
 #[test]
 fn mesomerism_IV_2_1() -> Result<()> {
     // (CH₃)₂C=O ↔ (CH₃)₂C⁺−O⁻
-    let expr = r#"<math intent=':chemical-formula'>
+    let expr = r#"<math>
         <msub><mrow><mo>(</mo><msub><mi>CH</mi><mn>3</mn></msub><mo>)</mo></mrow><mn>2</mn></msub>
         <mi mathvariant="normal">C</mi><mo>=</mo><mi mathvariant="normal">O</mi>
         <mo>&#x2194;</mo>
