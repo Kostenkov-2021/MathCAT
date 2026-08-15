@@ -879,54 +879,6 @@ mod tests {
         return stripped_path
     }
 
-    struct TestRulesDir {
-        path: PathBuf,
-    }
-
-    impl TestRulesDir {
-        fn path(&self) -> &Path {
-            return &self.path;
-        }
-    }
-
-    impl Drop for TestRulesDir {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(&self.path);
-        }
-    }
-
-    fn copy_dir_recursive(from: &Path, to: &Path) {
-        std::fs::create_dir_all(to).unwrap();
-        for entry in std::fs::read_dir(from).unwrap() {
-            let entry = entry.unwrap();
-            let file_type = entry.file_type().unwrap();
-            let target = to.join(entry.file_name());
-            if file_type.is_dir() {
-                copy_dir_recursive(&entry.path(), &target);
-            } else {
-                std::fs::copy(entry.path(), target).unwrap();
-            }
-        }
-    }
-
-    fn test_rules_dir_with_prefs() -> TestRulesDir {
-        let path = std::env::temp_dir().join(format!("mathcat-prefs-test-{}", fastrand::u64(..)));
-        std::fs::create_dir_all(&path).unwrap();
-
-        let source_rules = abs_rules_dir_path();
-        let prefs = std::fs::read_to_string(source_rules.join("prefs.yaml")).unwrap()
-            .replace("Language: Auto", "Language: zz");
-        std::fs::write(path.join("prefs.yaml"), prefs).unwrap();
-        std::fs::copy(source_rules.join("intent.yaml"), path.join("intent.yaml")).unwrap();
-        std::fs::copy(source_rules.join("definitions.yaml"), path.join("definitions.yaml")).unwrap();
-
-        copy_dir_recursive(&source_rules.join("Languages").join("en"), &path.join("Languages").join("en"));
-        copy_dir_recursive(&source_rules.join("Languages").join("zz"), &path.join("Languages").join("zz"));
-        copy_dir_recursive(&source_rules.join("Braille").join("Nemeth"), &path.join("Braille").join("Nemeth"));
-
-        return TestRulesDir { path };
-    }
-
     fn speech_rule_files_cache_is_empty() -> bool {
         crate::speech::SPEECH_RULES.with(|rules| rules.borrow().rule_files_cache_is_empty())
     }
@@ -1227,36 +1179,124 @@ cfg_if::cfg_if! {if #[cfg(not(feature = "include-zip"))] {
         });
     }
 
+    /// #262: MathCAT must notice when a rule file on disk changes and reload it.
+    /// This copies the rule files it needs (`en`, `zz`, and `Nemeth`) into a uniquely-named
+    /// temp dir, so the test can freely modify files and run in parallel without touching the
+    /// real Rules dir or the user's prefs file. All global state is restored on the way out.
     #[test]
     fn test_up_to_date() {
         use std::fs;
         use std::thread::sleep;
         use std::time::Duration;
+        use crate::interface;
+        use tempfile::Builder;
 
-        let test_rules = test_rules_dir_with_prefs();
-        let prefs_file = test_rules.path().join("prefs.yaml");
+        /// Recursively copy `src` into `dst` (creating `dst`).
+        fn copy_dir_all(src: &Path, dst: &Path) {
+            fs::create_dir_all(dst).unwrap();
+            for entry in fs::read_dir(src).unwrap() {
+                let entry = entry.unwrap();
+                let from = entry.path();
+                let to = dst.join(entry.file_name());
+                if from.is_dir() {
+                    copy_dir_all(&from, &to);
+                } else {
+                    fs::copy(&from, &to).unwrap();
+                }
+            }
+        }
 
-        let mut pref_manager = PreferenceManager::default();
-        pref_manager.set_rules_dir(test_rules.path()).unwrap();
-        pref_manager.user_prefs_file = Some(crate::speech::FileAndTime::new_with_time(test_rules.path().join("no-user-prefs.yaml")));
-        pref_manager.set_preference_files().unwrap();
-        pref_manager.api_prefs.prefs.insert("Language".to_string(), Yaml::String("zz".to_string()));
-        pref_manager.api_prefs.prefs.insert("SpeechStyle".to_string(), Yaml::String("ClearSpeak".to_string()));
-        assert_eq!(&pref_manager.pref_to_string("Language"), "zz");
-        pref_manager.set_all_files(test_rules.path()).unwrap();
+        // Restore all thread-local global state (rules dir, prefs, caches) when the test exits,
+        // even on a panic, so other tests sharing this thread are unaffected.
+        struct RestoreGuard;
+        impl Drop for RestoreGuard {
+            fn drop(&mut self) {
+                let _ = interface::set_preference("CheckRuleFiles", "Prefs");
+                PREF_MANAGER.with(|pref_manager| {
+                    let mut pref_manager = pref_manager.borrow_mut();
+                    // Force a full re-read: the stale temp paths would otherwise fool the up-to-date check.
+                    pref_manager.sys_prefs_file = None;
+                    pref_manager.user_prefs_file = None;
+                    let _ = pref_manager.initialize(abs_rules_dir_path());
+                });
+            }
+        }
 
-        assert_eq!(&pref_manager.pref_to_string("SpeechStyle"), "ClearSpeak");
-        assert_eq!(rel_path(&pref_manager.rules_dir, pref_manager.speech.as_path()), PathBuf::from("Languages/zz/ClearSpeak_Rules.yaml"));
+        let temp_dir = Builder::new()
+            .prefix("mathcat-up-to-date-")
+            .tempdir()
+            .expect("create temp rules dir");
+        let temp_rules_dir = temp_dir.path();
+        let real_rules_dir = abs_rules_dir_path();
 
-        let changed_contents = fs::read_to_string(&prefs_file).unwrap()
-            .replace("SpeechStyle: ClearSpeak", "SpeechStyle: SimpleSpeak");
-        fs::write(&prefs_file, changed_contents).unwrap();
-        sleep(Duration::from_millis(5));  // make sure the time changes enough to be recognized
+        // Only the "en" (fallback), "zz" (test language), and "Nemeth" (braille) rules are needed,
+        // plus the top-level files they include (incl. the full system prefs.yaml — partial YAML
+        // left keys like DecimalSeparator missing and crashed on CI with no user AppData prefs).
+        copy_dir_all(&real_rules_dir.join("Languages/en"), &temp_rules_dir.join("Languages/en"));
+        copy_dir_all(&real_rules_dir.join("Languages/zz"), &temp_rules_dir.join("Languages/zz"));
+        copy_dir_all(&real_rules_dir.join("Intent"), &temp_rules_dir.join("Intent"));
+        copy_dir_all(&real_rules_dir.join("Braille/Nemeth"), &temp_rules_dir.join("Braille/Nemeth"));
+        fs::copy(real_rules_dir.join("definitions.yaml"), temp_rules_dir.join("definitions.yaml")).unwrap();
+        fs::copy(real_rules_dir.join("intent.yaml"), temp_rules_dir.join("intent.yaml")).unwrap();
+        fs::copy(real_rules_dir.join("Braille/definitions.yaml"), temp_rules_dir.join("Braille/definitions.yaml")).unwrap();
+        fs::copy(real_rules_dir.join("prefs.yaml"), temp_rules_dir.join("prefs.yaml")).unwrap();
+        // Override only what this test needs (rest of prefs.yaml keeps defaults like DecimalSeparator).
+        let prefs_path = temp_rules_dir.join("prefs.yaml");
+        let prefs_text = fs::read_to_string(&prefs_path).unwrap()
+            .replace("Language: Auto", "Language: zz");
+        assert!(prefs_text.contains("Language: zz"), "failed to set Language: zz in copied prefs.yaml");
+        fs::write(&prefs_path, prefs_text).unwrap();
 
-        pref_manager.set_preference_files().unwrap();
-        pref_manager.api_prefs.prefs.remove("SpeechStyle");
-        assert_eq!(&pref_manager.pref_to_string("SpeechStyle"), "SimpleSpeak");
-        assert_eq!(rel_path(&pref_manager.rules_dir, pref_manager.speech.as_path()), PathBuf::from("Languages/zz/SimpleSpeak_Rules.yaml"));
+        interface::set_rules_dir(temp_rules_dir.to_str().unwrap()).unwrap();
+        let _restore = RestoreGuard;
+
+        // Pin in memory so a user prefs.yaml in the config dir cannot override Language/SpeechStyle
+        // (and so SpeechStyle stays ClearSpeak until we change it for the reload check).
+        PREF_MANAGER.with(|pref_manager| {
+            let mut pref_manager = pref_manager.borrow_mut();
+            pref_manager.set_string_pref("Language", "zz").unwrap();
+            pref_manager.set_string_pref("SpeechStyle", "ClearSpeak").unwrap();
+            pref_manager.set_string_pref("BrailleCode", "Nemeth").unwrap();
+            assert_eq!(rel_path(&pref_manager.rules_dir, pref_manager.speech.as_path()), PathBuf::from("Languages/zz/ClearSpeak_Rules.yaml"));
+            assert_ne!(&pref_manager.pref_to_string("DecimalSeparator"), NO_PREFERENCE,
+                       "DecimalSeparator missing — system prefs.yaml incomplete");
+        });
+        // "All" makes MathCAT check rule-file timestamps (not just prefs), so content edits are noticed.
+        interface::set_preference("CheckRuleFiles", "All").unwrap();
+
+        // ---- speech rule file: change its content and confirm the new speech is used ----
+        interface::set_mathml("<math><mrow intent='positive($n)'><mo>+</mo><mn arg='n'>10</mn></mrow></math>").unwrap();
+        assert_eq!(interface::get_spoken_text().unwrap(), "ClearSpeak positive from zz 10");
+
+        let speech_rule_file = temp_rules_dir.join("Languages/zz/ClearSpeak_Rules.yaml");
+        let speech_contents = fs::read_to_string(&speech_rule_file).unwrap();
+        fs::write(&speech_rule_file, speech_contents.replace("ClearSpeak positive from zz", "changed positive from zz")).unwrap();
+        sleep(Duration::from_millis(5));  // make sure the modification time changes enough to be recognized
+        assert_eq!(interface::get_spoken_text().unwrap(), "changed positive from zz 10",
+                   "modified speech rule file was not reloaded");
+
+        // ---- changing SpeechStyle must not change the language (still "zz") ----
+        interface::set_preference("SpeechStyle", "SimpleSpeak").unwrap();
+        PREF_MANAGER.with(|pref_manager| {
+            let pref_manager = pref_manager.borrow();
+            assert_eq!(&pref_manager.pref_to_string("Language"), "zz", "changing SpeechStyle changed the language");
+            assert_eq!(rel_path(&pref_manager.rules_dir, pref_manager.speech.as_path()), PathBuf::from("Languages/zz/SimpleSpeak_Rules.yaml"));
+        });
+        // the (unmodified) zz SimpleSpeak rules produce their own distinctive text
+        assert_eq!(interface::get_spoken_text().unwrap(), "SimpleSpeak positive from zz 10");
+
+        // ---- braille (Nemeth) unicode file: change a char and confirm the new braille is used ----
+        let braille_before = interface::get_braille("").unwrap();
+        let unicode_file = temp_rules_dir.join("Braille/Nemeth/unicode.yaml");
+        let unicode_contents = fs::read_to_string(&unicode_file).unwrap();
+        // remap the digit '1' to the (distinctive) full braille cell '⠿'
+        let changed_unicode = unicode_contents.replace("\"1\": [t: \"N⠂\"]", "\"1\": [t: \"N⠿\"]");
+        assert_ne!(changed_unicode, unicode_contents, "expected to find the Nemeth mapping for '1'");
+        fs::write(&unicode_file, changed_unicode).unwrap();
+        sleep(Duration::from_millis(5));
+        let braille_after = interface::get_braille("").unwrap();
+        assert_ne!(braille_after, braille_before, "modified Nemeth unicode file was not reloaded");
+        assert!(braille_after.contains('⠿'), "new Nemeth mapping for '1' not reflected in braille: {braille_after}");
     }
 
 }}

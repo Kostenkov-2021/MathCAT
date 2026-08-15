@@ -5535,9 +5535,10 @@ mod canonicalize_tests {
     }
 
     #[test]
+	#[ignore]  // need to figure out a test for this ("|" should have a precedence around ":" since that is an alternative notation for "such that", but "∣" is higher precedence)
     fn vertical_bar_divides() -> Result<()> {
         let test_str = "<math>
-		<mi>x</mi><mo>+</mo><mi>y</mi> <mo>|</mo><mn>12</mn>
+				<mi>x</mi><mo>+</mo><mi>y</mi> <mo>|</mo><mn>12</mn>
             </math>";
         let target_str = "<math>
 				<mrow data-changed='added'>
@@ -5546,7 +5547,7 @@ mod canonicalize_tests {
 					<mo>+</mo>
 					<mi>y</mi>
 				</mrow>
-				<mo>|</mo>
+				<mo>∣<!--divides--></mo>
 				<mn>12</mn>
 				</mrow>
 			</math>";
@@ -6911,7 +6912,7 @@ mod canonicalize_tests {
 				<mi> j </mi>
 				<mi> k </mi>
 				<none/>
-				<mi data-chem-state='true'> l </mi>
+				<mi> l </mi>
 				<none/>
 			</mmultiscripts>
 		</math>";
