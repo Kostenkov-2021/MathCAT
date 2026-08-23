@@ -361,6 +361,7 @@ fn square_formula_2_10_04() -> Result<()> {
 }
 
 #[test]
+#[ignore = "awaiting feedback from French braille team"]
 fn square_formula_3_10_05() -> Result<()> {
     let expr= r#"<math><mrow><mroot><mi>a</mi><mn>4</mn></mroot><mroot><mi>b</mi><mn>3</mn></mroot></mrow></math>"#;
     test_braille("French", expr, "⠰⠈⠹⠜⠁⠆⠰⠈⠩⠜⠃⠆")?;

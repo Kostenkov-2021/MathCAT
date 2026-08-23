@@ -137,6 +137,7 @@ fn parenthesis_simple_5_01() -> Result<()> {
 }
 
 #[test]
+#[ignore = "awaiting feedback from French braille team"]
 fn parenthesis_nested_imbrication_5_02() -> Result<()> {
     let expr= r#"<math><mrow><mi>f</mi><mo>(</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></mrow></math>"#;
     test_braille("French", expr, "⠋⠐⠦⠛⠦⠭⠴⠐⠴")?;
