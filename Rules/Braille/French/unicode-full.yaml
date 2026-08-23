@@ -19,7 +19,7 @@
  - "﻿": [t: ""]                 # 0xfeff (BOM / zero-width no-break space)
 
  
- - "⇌⥂⥄⥃": [t: "⠸⠻"]     # 0x21CC/2942/2944/2943 equilibrium (incl. trend variants)
+ - "⥂⥄⥃": [t: "⠸⠻"]     # 0x2942/2944/2943 equilibrium trend variants (⇌/0x21CC is in unicode.yaml)
 
 # Mappings for some new Unicode chemistry arrows/symbols
 # These repeat the short arrow version because that is what is in the spec (GTM 16), but the spec should really use the long version

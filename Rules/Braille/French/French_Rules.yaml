@@ -424,7 +424,7 @@
 -
   name: single-char-exceptions 
   tag: [mover]
-  match: "*[2][translate(., \"⏜^→⇀¯⌣◌̌~\",'')='']"
+  match: "*[2][translate(., \"⌒⌢⏜^→⇀¯⌣◌̌~\",'')='']"
   replace:
   - x: "*[2]"
   - x: "*[1]"
