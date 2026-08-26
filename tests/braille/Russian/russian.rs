@@ -449,6 +449,7 @@ fn source_arithmetic_examples_04() -> Result<()> {
 
 #[test]
 fn source_arithmetic_examples_05() -> Result<()> {
+    // Digit-group separators are omitted so that the columns remain contiguous.
     return test_russian_braille(r#"<math><mtable intent=":column-arithmetic"><mtr><mtd><mn>78650</mn></mtd></mtr><mtr><mtd><mrow><mo>-</mo><mn>1952</mn></mrow></mtd></mtr><mtr><mtd><mrow><mo>=</mo><mn>76698</mn></mrow></mtd></mtr></mtable></math>"#, "⠼⠛⠓⠋⠑⠚⠨⠳⠤⠁⠊⠑⠃⠨⠳⠶⠛⠋⠋⠊⠓");
 }
 
@@ -839,7 +840,7 @@ fn wikipedia_linear_parens_typeform_section() -> Result<()> {
 
 #[test]
 fn wikipedia_sqrt_01() -> Result<()> {
-    return test_russian_braille(r#"<math><msqrt><mn>10000</mn></msqrt><mo>&lt;</mo><mn>101</mn></math>"#, "⠩⠱⠼⠁⠚⠚⠚⠚⠹⠀⠪⠀⠼⠁⠚⠁");
+    return test_russian_braille(r#"<math><msqrt><mn>10000</mn></msqrt><mo>&lt;</mo><mn>101</mn></math>"#, "⠩⠱⠼⠁⠚⠄⠚⠚⠚⠹⠀⠪⠀⠼⠁⠚⠁");
 }
 
 #[test]
@@ -939,12 +940,12 @@ fn source_functions_logs_derivatives_18() -> Result<()> {
 
 #[test]
 fn source_functions_logs_derivatives_19() -> Result<()> {
-    return test_russian_braille(r#"<math><mrow><msup><mi>y</mi><mo>&#x2032;</mo></msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mo>=</mo><munder><mi>lim</mi><mrow><mi>x</mi><mo>&#x2192;</mo><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mfrac><mrow><mi>y</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mo>-</mo><mi>y</mi><mrow><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></mrow></mrow><mrow><mi>x</mi><mo>-</mo><msub><mi>x</mi><mn>0</mn></msub></mrow></mfrac></mrow></math>"#, "⠠⠽⠔⠣⠭⠜⠀⠶⠫⠇⠍⠨⠡⠠⠭⠀⠒⠕⠭⠡⠴⠱⠆⠽⠣⠭⠜⠀⠤⠽⠣⠭⠡⠴⠜⠀⠳⠭⠀⠤⠭⠡⠴⠰");
+    return test_russian_braille(r#"<math><mrow><msup><mi>y</mi><mo>&#x2032;</mo></msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mo>=</mo><munder><mi>lim</mi><mrow><mi>x</mi><mo>&#x2192;</mo><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mfrac><mrow><mi>y</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mo>-</mo><mi>y</mi><mrow><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></mrow></mrow><mrow><mi>x</mi><mo>-</mo><msub><mi>x</mi><mn>0</mn></msub></mrow></mfrac></mrow></math>"#, "⠠⠽⠔⠣⠭⠜⠀⠶⠫⠇⠍⠨⠡⠠⠭⠀⠒⠕⠀⠭⠡⠴⠱⠆⠽⠣⠭⠜⠀⠤⠽⠣⠭⠡⠴⠜⠀⠳⠭⠀⠤⠭⠡⠴⠰");
 }
 
 #[test]
 fn source_functions_logs_derivatives_20() -> Result<()> {
-    return test_russian_braille(r#"<math><mrow><msub><mi>x</mi><mi>n</mi></msub><mo>&#x2192;</mo><mi>a</mi><mspace width="1em"/><mtext>при</mtext><mspace width="1em"/><mi>n</mi><mo>&#x2192;</mo><mo>+</mo><mi>&#x221E;</mi></mrow></math>"#, "⠠⠭⠡⠝⠱⠀⠒⠕⠁⠀⠏⠗⠊⠀⠝⠀⠒⠕⠀⠖⠻");
+    return test_russian_braille(r#"<math><mrow><msub><mi>x</mi><mi>n</mi></msub><mo>&#x2192;</mo><mi>a</mi><mspace width="1em"/><mtext>при</mtext><mspace width="1em"/><mi>n</mi><mo>&#x2192;</mo><mo>+</mo><mi>&#x221E;</mi></mrow></math>"#, "⠠⠭⠡⠝⠱⠀⠒⠕⠀⠁⠀⠏⠗⠊⠀⠝⠀⠒⠕⠀⠖⠻");
 }
 
 #[test]
@@ -1144,7 +1145,8 @@ fn source_label_marks_06() -> Result<()> {
 
 #[test]
 fn source_label_marks_07() -> Result<()> {
-    return test_russian_braille(r#"<math><mover accent="true"><mi>x</mi><mo>&#x2190;</mo></mover></math>"#, "⠠⠭⠘⠦⠶");
+    // A small left arrow used as an exact upper mark is points 5|25.
+    return test_russian_braille(r#"<math><mover accent="true"><mi>x</mi><mo>&#x2190;</mo></mover></math>"#, "⠠⠭⠘⠐⠒");
 }
 
 #[test]
@@ -1154,7 +1156,7 @@ fn source_label_marks_08() -> Result<()> {
 
 #[test]
 fn source_label_marks_09() -> Result<()> {
-    return test_russian_braille(r#"<math><msup><mi>x</mi><mo>&#x2190;</mo></msup></math>"#, "⠠⠭⠨⠦⠶");
+    return test_russian_braille(r#"<math><msup><mi>x</mi><mo>&#x2190;</mo></msup></math>"#, "⠠⠭⠨⠐⠒");
 }
 
 #[test]
@@ -1219,7 +1221,7 @@ fn source_label_marks_21() -> Result<()> {
 
 #[test]
 fn source_label_marks_22() -> Result<()> {
-    return test_russian_braille(r#"<math><mmultiscripts><mi>x</mi><mi>n</mi><mn>2</mn><mprescripts/><none/><mo>&#x2190;</mo></mmultiscripts></math>"#, "⠨⠦⠶⠠⠭⠡⠝⠱⠌⠆");
+    return test_russian_braille(r#"<math><mmultiscripts><mi>x</mi><mi>n</mi><mn>2</mn><mprescripts/><none/><mo>&#x2190;</mo></mmultiscripts></math>"#, "⠨⠐⠒⠠⠭⠡⠝⠱⠌⠆");
 }
 
 #[test]
@@ -1334,7 +1336,10 @@ fn source_gost_logic_arrows_05() -> Result<()> {
 
 #[test]
 fn source_less_common_math_symbols_01() -> Result<()> {
-    return test_russian_braille(r#"<math><mrow><mn>3</mn><mo>&#xB1;</mo><mn>2</mn></mrow></math>"#, "⠼⠉⠀⠖⠤⠼⠃");
+    // ГОСТ specifies points 235|36 without an initial blank in numeric, prefix and infix contexts.
+    test_russian_braille(r#"<math><mrow><mn>3</mn><mo>&#xB1;</mo><mn>2</mn></mrow></math>"#, "⠼⠉⠖⠤⠼⠃")?;
+    test_russian_braille(r#"<math><mrow><mo>&#xB1;</mo><mi>x</mi></mrow></math>"#, "⠖⠤⠠⠭")?;
+    return test_russian_braille(r#"<math><mrow><mi>x</mi><mo>&#xB1;</mo><mi>y</mi></mrow></math>"#, "⠠⠭⠖⠤⠽");
 }
 
 #[test]
@@ -1404,16 +1409,166 @@ fn source_gost_large_vertical_arrows() -> Result<()> {
 }
 
 #[test]
+fn source_gost_division_sign() -> Result<()> {
+    // The two-dot division sign is preceded by a blank and restarts numeric mode.
+    return test_russian_braille(
+        r#"<math><mrow><mn>6</mn><mo>÷</mo><mn>2</mn></mrow></math>"#,
+        "⠼⠋⠀⠲⠼⠃",
+    );
+}
+
+#[test]
+fn source_gost_large_horizontal_arrows() -> Result<()> {
+    // Large horizontal arrows include blanks on both sides in running expressions.
+    test_russian_braille(r#"<math><mo>→</mo></math>"#, "⠒⠕")?;
+    test_russian_braille(r#"<math><mo>←</mo></math>"#, "⠪⠒")?;
+    test_russian_braille(r#"<math><mo>⟶</mo></math>"#, "⠒⠕")?;
+    test_russian_braille(r#"<math><mo>⟵</mo></math>"#, "⠪⠒")?;
+    test_russian_braille(
+        r#"<math><mrow><mi>x</mi><mo>→</mo><mi>y</mi></mrow></math>"#,
+        "⠠⠭⠀⠒⠕⠀⠽",
+    )?;
+    test_russian_braille(
+        r#"<math><mrow><mi>x</mi><mo>←</mo><mi>y</mi></mrow></math>"#,
+        "⠠⠭⠀⠪⠒⠀⠽",
+    )?;
+    test_russian_braille(
+        r#"<math><mrow><mi>x</mi><mo>⟶</mo><mi>y</mi></mrow></math>"#,
+        "⠠⠭⠀⠒⠕⠀⠽",
+    )?;
+    return test_russian_braille(
+        r#"<math><mrow><mi>x</mi><mo>⟵</mo><mi>y</mi></mrow></math>"#,
+        "⠠⠭⠀⠪⠒⠀⠽",
+    );
+}
+
+#[test]
+fn source_gost_long_number_digit_groups() -> Result<()> {
+    // Ungrouped integer parts longer than four digits are grouped from the right by point 3.
+    test_russian_braille(r#"<math><mn>1234</mn></math>"#, "⠼⠁⠃⠉⠙")?;
+    test_russian_braille(r#"<math><mn>12345</mn></math>"#, "⠼⠁⠃⠄⠉⠙⠑")?;
+    test_russian_braille(r#"<math><mn>1234567</mn></math>"#, "⠼⠁⠄⠃⠉⠙⠄⠑⠋⠛")?;
+    test_russian_braille(r#"<math><mn>12345,67</mn></math>"#, "⠼⠁⠃⠄⠉⠙⠑⠂⠋⠛")?;
+
+    // A fractional part is not divided into digit groups, regardless of its length.
+    return test_russian_braille(r#"<math><mn>1,23456</mn></math>"#, "⠼⠁⠂⠃⠉⠙⠑⠋");
+}
+
+#[test]
 fn source_gost_contextual_square_bracket_recognition_points() -> Result<()> {
-    test_russian_braille(r#"<math><mrow><mo>[</mo><mi>x</mi><mo>]</mo></mrow></math>"#, "⠠⠷⠠⠭⠠⠾")?;
-    return test_russian_braille(r#"<math><mrow><mo>[</mo><mn>1</mn><mo>]</mo></mrow></math>"#, "⠷⠼⠁⠾");
+    // At the beginning of a word and after a vowel, recognition point 6 is omitted.
+    test_russian_braille(r#"<math><mrow><mo>[</mo><mi>а</mi><mo>]</mo></mrow></math>"#, "⠷⠁⠾")?;
+
+    // A closing square bracket after a consonant needs recognition point 6.
+    test_russian_braille(r#"<math><mrow><mo>[</mo><mi>б</mi><mo>]</mo></mrow></math>"#, "⠷⠃⠠⠾")?;
+
+    // Brackets adjacent to a digit do not need recognition points.
+    test_russian_braille(r#"<math><mrow><mo>[</mo><mn>1</mn><mo>]</mo></mrow></math>"#, "⠷⠼⠁⠾")?;
+
+    // The same consonant rule applies to Latin mathematical identifiers.
+    test_russian_braille(r#"<math><mrow><mo>[</mo><mi>x</mi><mo>]</mo></mrow></math>"#, "⠷⠠⠭⠠⠾")?;
+
+    // Inside a word, a bracket after a vowel is unmarked; one after a consonant is marked.
+    test_russian_braille(
+        r#"<math><mrow><mi>а</mi><mo>[</mo><mi>б</mi><mo>]</mo><mi>в</mi></mrow></math>"#,
+        "⠁⠷⠃⠠⠾⠺",
+    )?;
+
+    // The adjacent printed token is found through nested rows and two-dimensional structures.
+    test_russian_braille(
+        r#"<math><mrow><mo>[</mo><mrow><mi>б</mi></mrow><mo>]</mo></mrow></math>"#,
+        "⠷⠃⠠⠾",
+    )?;
+    test_russian_braille(
+        r#"<math><mrow><mo>[</mo><mfrac><mi>а</mi><mi>б</mi></mfrac><mo>]</mo></mrow></math>"#,
+        "⠷⠁⠳⠃⠠⠾",
+    )?;
+    test_russian_braille(
+        r#"<math><mrow><mo>[</mo><msqrt><mi>б</mi></msqrt><mo>]</mo></mrow></math>"#,
+        "⠷⠩⠱⠃⠹⠠⠾",
+    )?;
+
+    // Following punctuation suppresses point 6, while an arithmetic operator does not.
+    test_russian_braille(
+        r#"<math><mrow><mo>[</mo><mi>б</mi><mo>]</mo><mo>,</mo></mrow></math>"#,
+        "⠷⠃⠾⠠⠂",
+    )?;
+    return test_russian_braille(
+        r#"<math><mrow><mo>[</mo><mi>б</mi><mo>]</mo><mo>+</mo><mn>1</mn></mrow></math>"#,
+        "⠷⠃⠠⠾⠀⠖⠼⠁",
+    );
+}
+
+#[test]
+fn source_gost_square_brackets_across_structural_boundaries() -> Result<()> {
+    // Nested rows do not interrupt the word context used to recognize square brackets.
+    test_russian_braille(
+        r#"<math><mrow><mi>б</mi><mrow><mo>[</mo><mi>а</mi><mo>]</mo></mrow></mrow></math>"#,
+        "⠃⠠⠷⠁⠾",
+    )?;
+    test_russian_braille(
+        r#"<math><mrow><mrow><mo>[</mo><mi>б</mi><mo>]</mo></mrow><mn>1</mn></mrow></math>"#,
+        "⠷⠃⠾⠼⠁",
+    )?;
+    test_russian_braille(
+        r#"<math><mrow><mrow><mo>[</mo><mi>б</mi><mo>]</mo></mrow><mo>,</mo></mrow></math>"#,
+        "⠷⠃⠾⠠⠂",
+    )?;
+
+    // Cell and row boundaries reset word context in tables and multiline expressions.
+    test_russian_braille(
+        r#"<math><mtable><mtr><mtd><mi>б</mi></mtd><mtd><mrow><mo>[</mo><mi>а</mi><mo>]</mo></mrow></mtd></mtr></mtable></math>"#,
+        "⠃⠀⠷⠁⠾",
+    )?;
+    test_russian_braille(
+        r#"<math><mtable><mtr><mtd><mrow><mo>[</mo><mi>б</mi><mo>]</mo></mrow></mtd><mtd><mn>1</mn></mtd></mtr></mtable></math>"#,
+        "⠷⠃⠠⠾⠀⠼⠁",
+    )?;
+    test_russian_braille(
+        r#"<math><mtable><mtr><mtd><mi>б</mi></mtd></mtr><mtr><mtd><mrow><mo>[</mo><mi>а</mi><mo>]</mo></mrow></mtd></mtr></mtable></math>"#,
+        "⠃⠨⠳⠷⠁⠾",
+    )?;
+
+    // Invisible operators are skipped when locating the adjacent printed token.
+    test_russian_braille(
+        r#"<math><mrow><mi>б</mi><mo>&#x2062;</mo><mrow><mo>[</mo><mi>а</mi><mo>]</mo></mrow></mrow></math>"#,
+        "⠃⠠⠷⠁⠾",
+    )?;
+    return test_russian_braille(
+        r#"<math><mrow><mrow><mo>[</mo><mi>б</mi><mo>]</mo></mrow><mo>&#x2062;</mo><mn>1</mn></mrow></math>"#,
+        "⠷⠃⠾⠼⠁",
+    );
 }
 
 #[test]
 fn source_gost_contextual_angle_bracket_recognition_points() -> Result<()> {
     test_russian_braille(r#"<math><mrow><mo>&#x27E8;</mo><mi>x</mi><mo>&#x27E9;</mo></mrow></math>"#, "⠈⠪⠠⠭⠈⠕")?;
     test_russian_braille(r#"<math><mrow><mo>&#x27E8;</mo><mn>1</mn><mo>&#x27E9;</mo></mrow></math>"#, "⠪⠼⠁⠕")?;
-    return test_russian_braille(r#"<math><mrow><mi>x</mi><mo>&lt;</mo><mi>y</mi></mrow></math>"#, "⠠⠭⠀⠪⠀⠽");
+    test_russian_braille(r#"<math><mrow><mi>x</mi><mo>&lt;</mo><mi>y</mi></mrow></math>"#, "⠠⠭⠀⠪⠀⠽")?;
+
+    // Recognition points follow the edge tokens inside nested and two-dimensional content.
+    test_russian_braille(
+        r#"<math><mrow><mo>⟨</mo><mrow><mi>б</mi></mrow><mo>⟩</mo></mrow></math>"#,
+        "⠈⠪⠃⠈⠕",
+    )?;
+    test_russian_braille(
+        r#"<math><mrow><mo>⟨</mo><mfrac><mi>а</mi><mi>б</mi></mfrac><mo>⟩</mo></mrow></math>"#,
+        "⠈⠪⠁⠳⠃⠈⠕",
+    )?;
+    test_russian_braille(
+        r#"<math><mrow><mo>⟨</mo><msqrt><mi>б</mi></msqrt><mo>⟩</mo></mrow></math>"#,
+        "⠈⠪⠩⠱⠃⠹⠈⠕",
+    )?;
+
+    // Invisible operators do not hide the printed edge tokens that require recognition points.
+    test_russian_braille(
+        r#"<math><mrow><mo>⟨</mo><mo>&#x2062;</mo><mi>x</mi><mo>&#x2062;</mo><mo>⟩</mo></mrow></math>"#,
+        "⠈⠪⠠⠭⠈⠕",
+    )?;
+
+    // Digits, punctuation and standalone arithmetic operators do not need recognition points.
+    test_russian_braille(r#"<math><mrow><mo>⟨</mo><mo>,</mo><mo>⟩</mo></mrow></math>"#, "⠪⠠⠂⠕")?;
+    return test_russian_braille(r#"<math><mrow><mo>⟨</mo><mo>+</mo><mo>⟩</mo></mrow></math>"#, "⠪⠀⠖⠕");
 }
 
 #[test]
@@ -1467,7 +1622,7 @@ fn wikipedia_linear_parens_aggregate_section() -> Result<()> {
 #[test]
 fn wikipedia_sqrt_aggregate_section() -> Result<()> {
     let expr = r#"<math><msqrt><mn>10000</mn></msqrt><mo>&lt;</mo><mn>101</mn></math>"#;
-    test_braille("Russian", expr, "⠩⠱⠼⠁⠚⠚⠚⠚⠹⠀⠪⠀⠼⠁⠚⠁")?;
+    test_braille("Russian", expr, "⠩⠱⠼⠁⠚⠄⠚⠚⠚⠹⠀⠪⠀⠼⠁⠚⠁")?;
     return Ok(());
 }
 
@@ -1602,6 +1757,6 @@ fn wikipedia_linear_parens_source_section() -> Result<()> {
 #[test]
 fn wikipedia_sqrt_source_section() -> Result<()> {
     let expr = r#"<math><msqrt><mn>10000</mn></msqrt><mo>&lt;</mo><mn>101</mn></math>"#;
-    test_braille("Russian", expr, "⠩⠱⠼⠁⠚⠚⠚⠚⠹⠀⠪⠀⠼⠁⠚⠁")?;
+    test_braille("Russian", expr, "⠩⠱⠼⠁⠚⠄⠚⠚⠚⠹⠀⠪⠀⠼⠁⠚⠁")?;
     return Ok(());
 }
