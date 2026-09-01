@@ -336,7 +336,7 @@
   - x: "*[2]"
 
 -
-  name: gost-58511-small-font
+  name: small-font
   tag: [mrow, mstyle, semantics]
   match: "@data-braille-typeform='small' or contains(@intent, ':small-font')"
   replace:
@@ -345,7 +345,7 @@
   - t: "⠔"
 
 -
-  name: gost-58511-letter-spacing
+  name: letter-spacing
   tag: [mrow, mstyle, semantics]
   match: "@data-braille-typeform='letter-spacing' or contains(@intent, ':letter-spacing')"
   replace:
@@ -354,7 +354,7 @@
   - t: "⠌"
 
 -
-  name: gost-58511-insertion
+  name: insertion
   tag: [mrow, mstyle, semantics]
   match: "@data-braille-typeform='insertion' or contains(@intent, ':insertion')"
   replace:
@@ -1580,14 +1580,14 @@
   - LeftEdge: "(parent::*/*[position() > 1 and position() < last()]/descendant-or-self::*[not(*) and not(self::m:mo[translate(., '\u2061\u2062\u2063\u2064', '')=''])])[1]"
   - RightEdge: "(parent::*/*[position() > 1 and position() < last()]/descendant-or-self::*[not(*) and not(self::m:mo[translate(., '\u2061\u2062\u2063\u2064', '')=''])])[last()]"
   match:
-  - "parent::*[IsBracketed(., '⟨', '⟩')] and"
-  - "((.='⟨' and not(preceding-sibling::*)) or (.='⟩' and not(following-sibling::*))) and"
+  - "(parent::*[IsBracketed(., '⟨', '⟩')] or parent::*[IsBracketed(., '〈', '〉')]) and"
+  - "(((.='⟨' or .='〈') and not(preceding-sibling::*)) or ((.='⟩' or .='〉') and not(following-sibling::*))) and"
   - "($LeftEdge[self::m:mi or self::m:mtext] or"
   - " $RightEdge[self::m:mi or self::m:mtext])"
   replace:
   - T: "⠈"
   - test:
-    - if: ".='⟨'"
+    - if: ".='⟨' or .='〈'"
       then: [T: "⠪"]
       else: [T: "⠕"]
 

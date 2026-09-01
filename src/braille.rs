@@ -2506,8 +2506,8 @@ fn russian_cleanup(_pref_manager: Ref<PreferenceManager>, raw_braille: String) -
 
     fn russian_typeform_indicator(typeform: char) -> &'static str {
         match typeform {
-            'B' => "⠻",                         // ГОСТ Р 58511: жирный шрифт, точки 12456.
-            'I' | 'T' | 'D' | 'S' | '𝔹' => "⠸", // ГОСТ Р 58511: курсив/шрифтовое выделение, точки 456.
+            'B' => "⠻",                         // Russian bold indicator, dots 12456.
+            'I' | 'T' | 'D' | 'S' | '𝔹' => "⠸", // Russian typeform indicator, dots 456.
             _ => "",
         }
     }
