@@ -1208,7 +1208,7 @@
  - "⋔":                                          # 0x22d4
      - test: 
          if: "$Verbosity!='Terse'"
-         then: [OT: "the"]
+         then: [T: ""]
      - T: "собственное пересечение"
  - "⋕":                                          # 0x22d5
      - test: 
