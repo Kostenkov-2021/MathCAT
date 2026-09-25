@@ -680,7 +680,7 @@
  - "∁":                                          # 0x2201
      - test: 
          if: "$Verbosity!='Terse'"
-         then: [OT: "the"]
+         then: [T: ""]
      - T: "дополнение"
  - "∂":                                          # 0x2202
      - test: 
@@ -751,9 +751,9 @@
               - else_if: $ClearSpeak_SetMemberSymbol = 'In'
                 then: [T: "находится в"]
               - else: [T: "принадлежит"]              # $ClearSpeak_SetMemberSymbol = 'Belongs'
- - "∋": [T: "содержит член"]                 # 0x220b
- - "∌": [T: "не содержит член"]         # 0x220c
- - "∍": [T: "содержит член"]                 # 0x220d
+ - "∋": [T: "содержит элемент"]                 # 0x220b
+ - "∌": [T: "не содержит элемента"]         # 0x220c
+ - "∍": [T: "содержит элемент"]                 # 0x220d
  - "∎": [T: "конец доказательства"]                        # 0x220e
  - "∏": [T: "произведение"]                             # 0x220f
  - "∐": [T: "копроизведение"]                           # 0x2210
@@ -774,17 +774,17 @@
  - "√":                                          # 0x221a
      - test: 
          if: "$Verbosity!='Terse'"
-         then: [OT: "the"]
+         then: [T: ""]
      - T: "квадратный корень из"
  - "∛":                                          # 0x221b
      - test: 
          if: "$Verbosity!='Terse'"
-         then: [OT: "the"]
+         then: [T: ""]
      - T: "кубический корень из"
  - "∜":                                          # 0x221c
      - test: 
          if: "$Verbosity!='Terse'"
-         then: [OT: "the"]
+         then: [T: ""]
      - T: "корень четвёртой степени из"
  - "∝":                                          # 0x221d
      - test: 
@@ -901,7 +901,7 @@
  - "≏":                                          # 0x224f
      - test: 
          if: "$Verbosity!='Terse'"
-         then: [OT: "the"]
+         then: [T: ""]
      - T: "разность"
  - "≐": [T: "равно с точкой сверху"]                # 0x2250
  - "≑":                                          # 0x2251
@@ -1198,12 +1198,12 @@
  - "⋒":                                          # 0x22d2
      - test: 
          if: "$Verbosity!='Terse'"
-         then: [OT: "the"]
+         then: [T: ""]
      - T: "двойное пересечение"
  - "⋓":                                          # 0x22d3
      - test: 
          if: "$Verbosity!='Terse'"
-         then: [OT: "the"]
+         then: [T: ""]
      - T: "двойное объединение"
  - "⋔":                                          # 0x22d4
      - test: 
