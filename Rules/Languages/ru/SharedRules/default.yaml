@@ -537,6 +537,20 @@
           - SpeechOverrides_CapitalLetters: "IfThenElse($RuInflectCapital and $SpeechOverrides_CapitalLetters='' and $Impairment='Blindness', $RuCapitalWord, $SpeechOverrides_CapitalLetters)"
           replace: [x: "text()"]
 
+- name: named-math-operator
+  tag: mi
+  match: "@class='qopname' and (text()='max' or text()='min' or text()='sup' or text()='lim')"
+  replace:
+  - bookmark: "@id"
+  - test:
+    - if: "text()='max'"
+      then: [T: "максимум"]
+    - else_if: "text()='min'"
+      then: [T: "минимум"]
+    - else_if: "text()='sup'"
+      then: [T: "супремум"]
+    - else: [T: "предел"]
+
 - name: default
   tag: mi
   match: "."
@@ -797,17 +811,55 @@
               then: [T: "конец верхнего индекса"]
               else: [T: "конец степени"]
 
+- name: named-operator-with-lower-limit
+  tag: munder
+  variables: [OperatorName: "translate(*[1], ' \u00A0\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u2061', '')"]
+  match: "$OperatorName='max' or $OperatorName='min' or $OperatorName='sup' or $OperatorName='lim'"
+  replace:
+  - test:
+    - if: "$OperatorName='max'"
+      then: [T: "максимум"]
+    - else_if: "$OperatorName='min'"
+      then: [T: "минимум"]
+    - else_if: "$OperatorName='sup'"
+      then: [T: "супремум"]
+    - else: [T: "предел"]
+  - test:
+    - if: "$OperatorName='lim'"
+      then: [T: "при"]
+    - else: [T: "по"]
+  - test:
+    - if: "$OperatorName='lim' and *[2][self::m:mrow and count(*)=3 and *[2][.='→' or .='↗']]"
+      then:
+      - x: "*[2]/*[1]"
+      - T: "стремящемся к"
+      - test:
+          if: "*[2]/*[3][.='∞']"
+          then: [T: "бесконечности"]
+          else: [x: "*[2]/*[3]"]
+      - test:
+          if: "*[2]/*[2][.='↗']"
+          then: [T: "снизу"]
+    - else: [x: "*[2]"]
+
 - name: default
   tag: munder
   match: "."
   replace:
   - test:
       if: "not(IsNode(*[1], 'leaf'))"
-      then: [T: "количество"]      # phrase(phrase(x 'quantity' with y above it)
+      then: [T: "выражение"]
   - x: "*[1]"
-  - T: "с"      # phrase(x 'with' z below it)
+  - T: "с"
   - x: "*[2]"
-  - T: "нижний придел"      # phrase(x with z 'below' it)
+  - T: "снизу"
+
+- name: double-overline
+  tag: mover
+  match: "*[1][self::m:mover or self::m:modified-variable][*[2][.='¯']] and *[2][.='¯']"
+  replace:
+  - x: "*[1]/*[1]"
+  - T: "с двойным надчёркиванием"
 
 - name: diacriticals
   tag: mover
@@ -822,11 +874,11 @@
   replace:
   - test:
       if: "not(IsNode(*[1], 'leaf'))"
-      then: [T: "количество"]      # phrase(phrase(the 'quantity' x plus 1 with y above it)
+      then: [T: "выражение"]
   - x: "*[1]"
-  - T: "с"         # phrase(x modified 'with' y above it)
+  - T: "с"
   - x: "*[2]"
-  - T: "с"        # phrase(x modified 'with' y above it)
+  - T: "сверху"
 
 - name: default
   tag: munderover
@@ -834,13 +886,13 @@
   replace:
   - test:
       if: "not(IsNode(*[1], 'leaf'))"
-      then: [T: "количество"]      # phrase(the 'quantity' x plus 1 with y above it)
+      then: [T: "выражение"]
   - x: "*[1]"
-  - T: "с"         # phrase(x modified 'with' y above it)
+  - T: "с"
   - x: "*[2]"
-  - T: "ниже и"    # phrase(x modified with y 'below and' y above it)
+  - T: "снизу и"
   - x: "*[3]"
-  - T: "верхний придел"        # phrase(x modified with y 'above' it)
+  - T: "сверху"
 
 - name: default
   #   Here we support up to 2 prescripts and up to 4 postscripts -- that should cover all reasonable cases

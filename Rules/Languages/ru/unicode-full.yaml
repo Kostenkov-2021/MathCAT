@@ -14,9 +14,11 @@
  - "«": [T: "левая двойная угловая кавычка"] # 0xab
  - "¯":                                            # 0xaf
      - test:
-        if: "ancestor::m:modified-variable and preceding-sibling::*[1][self::m:mi]"
-        then: [T: "черта"]
-        else: [T: "линия"]
+        - if: "(parent::m:mover or parent::m:modified-variable) and preceding-sibling::*[1][self::m:mi]"
+          then: [T: "с чертой"]
+        - else_if: "parent::m:mover or parent::m:modified-variable"
+          then: [T: "чертой"]
+        - else: [T: "линия"]
  - "²": [T: "два"]                                 # 0xb2
  - "³": [T: "три"]                               # 0xb3
  - "´": [T: "акут"]                               # 0xb4
@@ -791,7 +793,11 @@
          if: "$Verbosity!='Terse'"
          then: [T: "является"]
      - T: "пропорционально"
- - "∞": [T: "бесконечность"]                          # 0x221e
+ - "∞":                                           # 0x221e
+    - test:
+        if: "ancestor::*[self::m:limit or self::m:limit-sup or self::m:limit-inf]"
+        then: [T: "бесконечности"]
+        else: [T: "бесконечность"]
  - "∟": [T: "прямой угол"]                         # 0x221f
  - "∠": [T: "угол"]                               # 0x2220
  - "∡": [T: "измеренный угол"]                      # 0x2221
