@@ -1198,14 +1198,16 @@ impl Function for EdgeNode {
 }
 
 pub struct SpeakIntentName;
-/// SpeakIntentName(intent, verbosity, fixity)
-/// Real-life example:
-///   If a MathML element has intent="factorial($x)", in the rules you might see:
-///      - x: "SpeakIntentName(name(.), $Verbosity, 'postfix')"
-///   For English, MathCAT will resolve:
-///      SpeakIntentName("factorial", "Verbose", "postfix") → "factorial"
-///   This is used to generate speech like "x factorial" for expressions like "x!".
-///   Returns a string corresponding to the intent name with the indicated verbosity
+/// SpeakIntentName(intentName, verbosity, fixity)
+/// Returns the spoken name for an intent, using the selected verbosity and fixity.
+/// Calling arguments (as used by the rule layer):
+///   1. intentName: the intent name, e.g. "factorial" or "ratio"
+///   2. verbosity: "Terse", "Medium", or "Verbose"
+///   3. fixity: the function fixity, e.g. "prefix", "infix", "postfix"
+/// Example:
+///   SpeakIntentName("factorial", "Verbose", "postfix") -> "factorial"
+///   SpeakIntentName("ratio", "Medium", "infix") -> "ratio"
+/// This is used to generate speech such as "x factorial" for expressions like "x!".
 impl Function for SpeakIntentName {
     fn evaluate<'d>(&self,
                         _context: &context::Evaluation<'_, 'd>,
@@ -1222,12 +1224,16 @@ impl Function for SpeakIntentName {
 }
 
 pub struct IntentFunctionUseArityPath;
-/// IntentFunctionUseArityPath(name, fixity, argCount)
-///   True when IntentMappings `|` arity templates match this argument count.
-///   For example, in en/definitions.yaml for intent "choose":
-///     "function=choose|from|to"
-///   means for three arguments, templates like "choose n from k to l" apply.
-///   This returns true if the `choose` function is used with three arguments.
+/// IntentFunctionUseArityPath(intentName, fixity, argCount)
+/// Returns true when the intent uses an arity-based template instead of a binary separator form.
+/// Calling arguments (as used by the rule layer):
+///   1. intentName: the intent name, e.g. "choose" or "ratio"
+///   2. fixity: the function fixity, e.g. "function" or "postfix"
+///   3. argCount: the number of arguments supplied to the function
+/// Example:
+///   IntentFunctionUseArityPath("choose", "function", 3) -> true
+///   IntentFunctionUseArityPath("ratio", "function", 2) -> false
+/// This is used for patterns such as "choose n from k to l", where the template depends on arity.
 impl Function for IntentFunctionUseArityPath {
     fn evaluate<'d>(&self,
                         _context: &context::Evaluation<'_, 'd>,
@@ -1246,8 +1252,17 @@ impl Function for IntentFunctionUseArityPath {
 }
 
 pub struct IntentFunctionGlueBefore;
-/// IntentFunctionGlueBefore(name, fixity, argIndex, argCount)
-///   Glue spoken immediately before the given 1-based argument when using an arity template.
+/// IntentFunctionGlueBefore(intentName, fixity, argIndex, argCount)
+/// Returns the leading glue text to speak before a specific argument in an arity-based template.
+/// Calling arguments (as used by the rule layer):
+///   1. intentName: the intent name, e.g. "choose" or "binomial"
+///   2. fixity: the function fixity, e.g. "function"
+///   3. argIndex: the 1-based argument position to inspect
+///   4. argCount: the total number of arguments in the call
+/// Example:
+///   IntentFunctionGlueBefore("choose", "function", 2, 3) -> "from"
+///   IntentFunctionGlueBefore("choose", "function", 3, 3) -> "to"
+/// This controls text such as "choose n from k to l".
 impl Function for IntentFunctionGlueBefore {
     fn evaluate<'d>(&self,
                         _context: &context::Evaluation<'_, 'd>,
@@ -1267,13 +1282,16 @@ impl Function for IntentFunctionGlueBefore {
 }
 
 pub struct IntentFunctionArgSeparator;
-/// IntentFunctionArgSeparator(name, fixity, argCount)
-///   Glue spoken immediately before the given 1-based argument when using an arity template.
-///   For example, in en/definitions.yaml, for the intent name "choose", the mapping is:
-///   "function=choose|from|to".
-///   When called as IntentFunctionGlueBefore("choose", "function", 2, 3), this returns "from",
-///   which is spoken before the second argument when reading an expression like "choose n from k".
-///   Likewise, for arg_index = 3, it would return "to".
+/// IntentFunctionArgSeparator(intentName, fixity, argCount)
+/// Returns the separator text placed between arguments when the intent uses a binary separator form.
+/// Calling arguments (as used by the rule layer):
+///   1. intentName: the intent name, e.g. "ratio" or "gcd"
+///   2. fixity: the function fixity, e.g. "function"
+///   3. argCount: the number of arguments supplied to the function
+/// Example:
+///   IntentFunctionArgSeparator("ratio", "function", 2) -> "to"
+///   IntentFunctionArgSeparator("gcd", "function", 2) -> "and"
+/// This is the text spoken between the first and second arguments, as in "ratio of 6 to 3".
 impl Function for IntentFunctionArgSeparator {
     fn evaluate<'d>(&self,
                         _context: &context::Evaluation<'_, 'd>,
@@ -1292,9 +1310,17 @@ impl Function for IntentFunctionArgSeparator {
 }
 
 pub struct GetBracketingIntentName;
-/// GetBracketingIntentName(name, verbosity, at_start_or_end)
-///   Returns a potentially empty string to use to bracket an intent expression (start foo... end foo)
-/// 
+/// GetBracketingIntentName(intentName, fixity, verbosity, startOrEnd)
+/// Returns the optional bracket wording for an intent expression, such as the leading/trailing phrase
+/// around a start/end bracketed form.
+/// Calling arguments (as used by the rule layer):
+///   1. intentName: the intent name, e.g. "floor" or "ceil"
+///   2. fixity: the fixity, e.g. "prefix" or "postfix"
+///   3. verbosity: "Terse", "Medium", or "Verbose"
+///   4. startOrEnd: either "start" or "end"
+/// Example:
+///   GetBracketingIntentName("floor", "prefix", "Medium", "start") -> "the floor of"
+/// This is used to wrap expressions like "the floor of x" rather than just speaking the bare function name.
 impl GetBracketingIntentName {
     fn bracketing_words(intent_name: &str, verbosity: &str, fixity: &str, at_start: bool) -> String {
         crate::definitions::SPEECH_DEFINITIONS.with(|definitions| {
@@ -1360,11 +1386,15 @@ impl Function for GetBracketingIntentName {
 }
 
 pub struct GetNavigationPartName;
-/// GetNavigationPartName(name, index)
-/// Returns the name to use to speak the part of a navigation expression (e.g., 'numerator', 'denominator', 'base', 'exponent', ...).
-/// If there is no match, an empty string is returned.
-/// 'index' is 0-based
-/// 
+/// GetNavigationPartName(intentName, index)
+/// Returns the navigation label for one part of a structured expression.
+/// Calling arguments (as used by the rule layer):
+///   1. intentName: the intent name, e.g. "fraction" or "power"
+///   2. index: the 0-based position of the part to speak
+/// Example:
+///   GetNavigationPartName("fraction", 0) -> "numerator"
+///   GetNavigationPartName("fraction", 1) -> "denominator"
+/// If no matching part exists, this returns an empty string.
 impl GetNavigationPartName {
     fn navigation_part_name(intent_name: &str, index: usize) -> String {
         crate::definitions::SPEECH_DEFINITIONS.with(|definitions| {
