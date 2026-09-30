@@ -407,12 +407,11 @@ pub fn intent_function_arg_separator(intent_name: &str, fixity: &str, arg_count:
         // On an exact arity match the glue words are inserted individually (no separator).
         return if arity_glue(&mapping, arg_count).is_some() { String::new() } else { ",".to_string() };
     }
-    if arg_count == 2 {
-        if let Some(separator) = binary_separator(&mapping) {
-            if !separator.eq_ignore_ascii_case("comma") {
-                return separator.to_string();
-            }
-        }
+    if arg_count == 2
+        && let Some(separator) = binary_separator(&mapping)
+        && !separator.eq_ignore_ascii_case("comma")
+    {
+        return separator.to_string();
     }
     ",".to_string()
 }

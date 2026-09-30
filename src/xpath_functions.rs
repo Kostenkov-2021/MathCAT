@@ -1204,6 +1204,7 @@ pub struct SpeakIntentName;
 ///   1. intentName: the intent name, e.g. "factorial" or "ratio"
 ///   2. verbosity: "Terse", "Medium", or "Verbose"
 ///   3. fixity: the function fixity, e.g. "prefix", "infix", "postfix"
+///
 /// Example:
 ///   SpeakIntentName("factorial", "Verbose", "postfix") -> "factorial"
 ///   SpeakIntentName("ratio", "Medium", "infix") -> "ratio"
@@ -1230,6 +1231,7 @@ pub struct IntentFunctionUseArityPath;
 ///   1. intentName: the intent name, e.g. "choose" or "ratio"
 ///   2. fixity: the function fixity, e.g. "function" or "postfix"
 ///   3. argCount: the number of arguments supplied to the function
+///
 /// Example:
 ///   IntentFunctionUseArityPath("choose", "function", 3) -> true
 ///   IntentFunctionUseArityPath("ratio", "function", 2) -> false
@@ -1259,6 +1261,7 @@ pub struct IntentFunctionGlueBefore;
 ///   2. fixity: the function fixity, e.g. "function"
 ///   3. argIndex: the 1-based argument position to inspect
 ///   4. argCount: the total number of arguments in the call
+///
 /// Example:
 ///   IntentFunctionGlueBefore("choose", "function", 2, 3) -> "from"
 ///   IntentFunctionGlueBefore("choose", "function", 3, 3) -> "to"
@@ -1288,6 +1291,7 @@ pub struct IntentFunctionArgSeparator;
 ///   1. intentName: the intent name, e.g. "ratio" or "gcd"
 ///   2. fixity: the function fixity, e.g. "function"
 ///   3. argCount: the number of arguments supplied to the function
+///
 /// Example:
 ///   IntentFunctionArgSeparator("ratio", "function", 2) -> "to"
 ///   IntentFunctionArgSeparator("gcd", "function", 2) -> "and"
@@ -1318,6 +1322,7 @@ pub struct GetBracketingIntentName;
 ///   2. fixity: the fixity, e.g. "prefix" or "postfix"
 ///   3. verbosity: "Terse", "Medium", or "Verbose"
 ///   4. startOrEnd: either "start" or "end"
+///
 /// Example:
 ///   GetBracketingIntentName("floor", "prefix", "Medium", "start") -> "the floor of"
 /// This is used to wrap expressions like "the floor of x" rather than just speaking the bare function name.
@@ -1354,6 +1359,7 @@ pub struct GetNavigationPartName;
 /// Calling arguments (as used by the rule layer):
 ///   1. intentName: the intent name, e.g. "fraction" or "power"
 ///   2. index: the 0-based position of the part to speak
+///
 /// Example:
 ///   GetNavigationPartName("fraction", 0) -> "numerator"
 ///   GetNavigationPartName("fraction", 1) -> "denominator"
