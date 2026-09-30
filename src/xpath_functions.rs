@@ -24,7 +24,7 @@ use crate::definitions::{Definitions, SPEECH_DEFINITIONS, BRAILLE_DEFINITIONS};
 use regex::Regex;
 use crate::pretty_print::mml_to_string;
 use std::{cell::{Ref, RefCell}, collections::HashMap};
-use log::{debug, error, warn};
+use log::debug;
 use std::sync::LazyLock;
 use std::thread::LocalKey;
 use phf::phf_set;
@@ -1323,46 +1323,9 @@ pub struct GetBracketingIntentName;
 /// This is used to wrap expressions like "the floor of x" rather than just speaking the bare function name.
 impl GetBracketingIntentName {
     fn bracketing_words(intent_name: &str, verbosity: &str, fixity: &str, at_start: bool) -> String {
-        crate::definitions::SPEECH_DEFINITIONS.with(|definitions| {
-            let definitions = definitions.borrow();
-            if let Some(intent_name_pattern) = definitions.get_hashmap("IntentMappings").unwrap().get(intent_name) {
-                // Split the pattern is: fixity-def [|| fixity-def]*
-                //   fixity-def := fixity=open; verbosity; close
-                //   verbosity := terse | medium | verbose
-                if let Some(matched_intent) = intent_name_pattern.split("||").find(|&entry| entry.trim().starts_with(fixity)) {
-                    let (_, matched_intent) = matched_intent.split_once("=").unwrap_or_default();
-                    let name_part = crate::infer_intent::intent_mapping_name_part(matched_intent);
-                    let parts = name_part.split(";").collect::<Vec<&str>>();
-                    if parts.len() == 1 {
-                        return "".to_string();
-                    }
-                    if parts.len() != 3 {
-                        error!("Intent '{}' has {} ';' separated parts, should have 3", intent_name, parts.len());
-                        return "".to_string();
-                    }
-                    let mut speech = (if at_start {parts[0]} else {parts[2]}).split(":").collect::<Vec<&str>>();
-                    match speech.len() {
-                        1 => return speech[0].to_string(),
-                        2 | 3 => {
-                            if speech.len() == 2 {
-                                warn!("Intent '{intent_name}'  has only two ':' separated parts, but should have three");
-                                speech.push(speech[1]);
-                            }
-                            let bracketing_words = match verbosity {
-                                "Terse" => speech[0],
-                                "Medium" => speech[1],
-                                _ => speech[2],
-                            };
-                            return bracketing_words.to_string();
-                        },
-                        _ => {
-                            error!("Intent '{}' has too many ({}) operator names, should only have 2", intent_name, speech.len());
-                        },
-                    }
-                }   
-            };
-            return "".to_string();
-        })
+        // Bracketing words come from the `open; name; close` form of a fixity mapping; the
+        // parsing lives in infer_intent so all IntentMappings delimiter rules stay in one place.
+        crate::infer_intent::intent_bracketing_word(intent_name, fixity, verbosity, at_start)
     }
 }
 
