@@ -327,7 +327,7 @@
     "precedes": "infix=precedes",
     "proportional": "infix=proportional to",
     "range-separator": "infix=through",
-    "ratio": "function=ratio : to | the ratio : to | the ratio : to",
+    "ratio": "function=ratio : to | the ratio : to",
     "similar": "infix=similar to",
     "subset": "infix=subset of",
     "subset-or-equal": "infix=subset or equal to",
