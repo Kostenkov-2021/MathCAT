@@ -5,8 +5,13 @@ use crate::common::*;
 use anyhow::Result;
 
 fn all_russian_speech_modes(expr: &str, expected: &str) -> Result<()> {
+    russian_speech_verbosities(expr, expected, expected)
+}
+
+fn russian_speech_verbosities(expr: &str, terse: &str, normal: &str) -> Result<()> {
     for style in ["ClearSpeak", "SimpleSpeak"] {
         for verbosity in ["Terse", "Medium", "Verbose"] {
+            let expected = if verbosity == "Terse" { terse } else { normal };
             test_prefs("ru", style, vec![("Verbosity", verbosity), ("IntentErrorRecovery", "Error")], expr, expected)?;
         }
     }
@@ -240,29 +245,1188 @@ fn intent_prob_x() -> Result<()> {
 }
 
 // Reviewed W3C names and argument-grammar regressions.
+// W3C Core Concept List, reviewed 2026-10-30: https://w3c.github.io/mathml-docs/intent-core-concepts/
 #[test]
-fn w3c_core_translations() -> Result<()> {
-    // Each previously missing core name has a reviewed speech contract in both styles and all verbosities.
-    // Inventory source: https://w3c.github.io/mathml-docs/intent-core-concepts/ (reviewed 2026-10-30).
-    let mut count=0;
-    for line in include_str!("w3c_core_expected.tsv").lines().skip(1) {
-        let fields: Vec<_>=line.splitn(4,'\t').collect();
-        let name=fields[0];
-        let arity: usize=fields[1].parse()?;
-        let references=(0..arity).map(|i|format!("$a{i}")).collect::<Vec<_>>().join(",");
-        let children=(0..arity).map(|i|format!("<mi arg='a{i}'>{}</mi>",['x','y','z','n'][i%4])).collect::<String>();
-        let mathml=if arity==0 {format!("<math><mi intent='{name}'>x</mi></math>")} else {format!("<math><mrow intent='{name}({references})'>{children}</mrow></math>")};
-        for style in ["ClearSpeak", "SimpleSpeak"] {
-            for verbosity in ["Terse", "Medium", "Verbose"] {
-                // Existing generic function speech omits 'от' in terse mode.
-                let expected=if verbosity=="Terse" {fields[2]} else {fields[3]};
-                test_prefs("ru",style,vec![("Verbosity",verbosity),("IntentErrorRecovery","Error")],&mathml,expected)?;
-            }
-        }
-        count+=1;
-    }
-    assert_eq!(count,169,"The audited core inventory must not silently lose cases");
-    Ok(())
+fn w3c_core_adjugate() -> Result<()> {
+    // W3C adjugate: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='adjugate($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "присоединённая матрица икс")
+}
+
+#[test]
+fn w3c_core_and() -> Result<()> {
+    // W3C and: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='and($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс и игрек")
+}
+
+#[test]
+fn w3c_core_angle() -> Result<()> {
+    // W3C angle: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='angle($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "угол икс")
+}
+
+#[test]
+fn w3c_core_angle_measure() -> Result<()> {
+    // W3C angle-measure: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='angle-measure($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "мера угла икс")
+}
+
+#[test]
+fn w3c_core_annotation() -> Result<()> {
+    // W3C annotation: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='annotation($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс с пояснением, игрек")
+}
+
+#[test]
+fn w3c_core_applied_to() -> Result<()> {
+    // W3C applied-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='applied-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс от игрек")
+}
+
+#[test]
+fn w3c_core_approximately() -> Result<()> {
+    // W3C approximately: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='approximately($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс приблизительно равно, игрек")
+}
+
+#[test]
+fn w3c_core_arc_hyperbolic_cosecant() -> Result<()> {
+    // W3C arc-hyperbolic-cosecant: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arc-hyperbolic-cosecant($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "обратная функция гиперболического косеканса икс", "обратная функция гиперболического косеканса от икс")
+}
+
+#[test]
+fn w3c_core_arc_hyperbolic_cosine() -> Result<()> {
+    // W3C arc-hyperbolic-cosine: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arc-hyperbolic-cosine($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "обратная функция гиперболического косинуса икс", "обратная функция гиперболического косинуса от икс")
+}
+
+#[test]
+fn w3c_core_arc_hyperbolic_cotangent() -> Result<()> {
+    // W3C arc-hyperbolic-cotangent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arc-hyperbolic-cotangent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "обратная функция гиперболического котангенса икс", "обратная функция гиперболического котангенса от икс")
+}
+
+#[test]
+fn w3c_core_arc_hyperbolic_secant() -> Result<()> {
+    // W3C arc-hyperbolic-secant: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arc-hyperbolic-secant($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "обратная функция гиперболического секанса икс", "обратная функция гиперболического секанса от икс")
+}
+
+#[test]
+fn w3c_core_arc_hyperbolic_sine() -> Result<()> {
+    // W3C arc-hyperbolic-sine: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arc-hyperbolic-sine($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "обратная функция гиперболического синуса икс", "обратная функция гиперболического синуса от икс")
+}
+
+#[test]
+fn w3c_core_arc_hyperbolic_tangent() -> Result<()> {
+    // W3C arc-hyperbolic-tangent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arc-hyperbolic-tangent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "обратная функция гиперболического тангенса икс", "обратная функция гиперболического тангенса от икс")
+}
+
+#[test]
+fn w3c_core_arccosecant() -> Result<()> {
+    // W3C arccosecant: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arccosecant($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "арккосеканс икс", "арккосеканс от икс")
+}
+
+#[test]
+fn w3c_core_arccosine() -> Result<()> {
+    // W3C arccosine: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arccosine($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "арккосинус икс", "арккосинус от икс")
+}
+
+#[test]
+fn w3c_core_arccotangent() -> Result<()> {
+    // W3C arccotangent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arccotangent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "арккотангенс икс", "арккотангенс от икс")
+}
+
+#[test]
+fn w3c_core_arcsecant() -> Result<()> {
+    // W3C arcsecant: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arcsecant($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "арксеканс икс", "арксеканс от икс")
+}
+
+#[test]
+fn w3c_core_arcsine() -> Result<()> {
+    // W3C arcsine: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arcsine($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "арксинус икс", "арксинус от икс")
+}
+
+#[test]
+fn w3c_core_arctangent() -> Result<()> {
+    // W3C arctangent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='arctangent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "арктангенс икс", "арктангенс от икс")
+}
+
+#[test]
+fn w3c_core_area() -> Result<()> {
+    // W3C area: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='area($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "площадь икс")
+}
+
+#[test]
+fn w3c_core_binomial_coefficient() -> Result<()> {
+    // W3C binomial-coefficient: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='binomial-coefficient($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "число сочетаний из икс по игрек")
+}
+
+#[test]
+fn w3c_core_braced_group() -> Result<()> {
+    // W3C braced-group: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='braced-group($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "группа икс")
+}
+
+#[test]
+fn w3c_core_cardinality() -> Result<()> {
+    // W3C cardinality: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='cardinality($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "мощность икс")
+}
+
+#[test]
+fn w3c_core_cartesian_coordinate() -> Result<()> {
+    // W3C cartesian-coordinate: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='cartesian-coordinate($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "декартовы координаты икс запятая игрек")
+}
+
+#[test]
+fn w3c_core_cartesian_product() -> Result<()> {
+    // W3C cartesian-product: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='cartesian-product($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс декартово произведение; игрек")
+}
+
+#[test]
+fn w3c_core_ceiling() -> Result<()> {
+    // W3C ceiling: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='ceiling($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "округление вверх икс")
+}
+
+#[test]
+fn w3c_core_change() -> Result<()> {
+    // W3C change: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='change($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "изменение икс")
+}
+
+#[test]
+fn w3c_core_complement() -> Result<()> {
+    // W3C complement: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='complement($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "дополнение икс")
+}
+
+#[test]
+fn w3c_core_complex_arg() -> Result<()> {
+    // W3C complex-arg: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='complex-arg($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "аргумент икс")
+}
+
+#[test]
+fn w3c_core_complex_conjugate() -> Result<()> {
+    // W3C complex-conjugate: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='complex-conjugate($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "комплексное сопряжение икс")
+}
+
+#[test]
+fn w3c_core_composed_with() -> Result<()> {
+    // W3C composed-with: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='composed-with($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс композиция с, игрек")
+}
+
+#[test]
+fn w3c_core_conditional_probability() -> Result<()> {
+    // W3C conditional-probability: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='conditional-probability($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "вероятность икс при условии игрек")
+}
+
+#[test]
+fn w3c_core_congruent() -> Result<()> {
+    // W3C congruent: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='congruent($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс конгруэнтно, игрек")
+}
+
+#[test]
+fn w3c_core_constraint() -> Result<()> {
+    // W3C constraint: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='constraint($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс при условии, игрек")
+}
+
+#[test]
+fn w3c_core_cosecant() -> Result<()> {
+    // W3C cosecant: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='cosecant($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "косеканс икс", "косеканс от икс")
+}
+
+#[test]
+fn w3c_core_cosine() -> Result<()> {
+    // W3C cosine: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='cosine($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "косинус икс", "косинус от икс")
+}
+
+#[test]
+fn w3c_core_cotangent() -> Result<()> {
+    // W3C cotangent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='cotangent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "котангенс икс", "котангенс от икс")
+}
+
+#[test]
+fn w3c_core_defined_as() -> Result<()> {
+    // W3C defined-as: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='defined-as($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс определяется как, игрек")
+}
+
+#[test]
+fn w3c_core_diameter() -> Result<()> {
+    // W3C diameter: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='diameter($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "диаметр икс")
+}
+
+#[test]
+fn w3c_core_differential_d() -> Result<()> {
+    // W3C differential-d: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='differential-d'>x</mi></math>";
+    all_russian_speech_modes(expr, "дэ")
+}
+
+#[test]
+fn w3c_core_dimensional_product() -> Result<()> {
+    // W3C dimensional-product: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='dimensional-product($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс на игрек")
+}
+
+#[test]
+fn w3c_core_direct_product() -> Result<()> {
+    // W3C direct-product: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='direct-product($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс прямое произведение, игрек")
+}
+
+#[test]
+fn w3c_core_directed_line_segment() -> Result<()> {
+    // W3C directed-line-segment: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='directed-line-segment($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "направленный отрезок икс игрек")
+}
+
+#[test]
+fn w3c_core_distance() -> Result<()> {
+    // W3C distance: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='distance($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "расстояние икс")
+}
+
+#[test]
+fn w3c_core_divided_by() -> Result<()> {
+    // W3C divided-by: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='divided-by($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс разделить на, игрек")
+}
+
+#[test]
+fn w3c_core_divides() -> Result<()> {
+    // W3C divides: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='divides($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс делит игрек")
+}
+
+#[test]
+fn w3c_core_does_not_belong_to() -> Result<()> {
+    // W3C does-not-belong-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='does-not-belong-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс не принадлежит, игрек")
+}
+
+#[test]
+fn w3c_core_does_not_divide() -> Result<()> {
+    // W3C does-not-divide: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='does-not-divide($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс не делит игрек")
+}
+
+#[test]
+fn w3c_core_downwards_diagonal_ellipsis() -> Result<()> {
+    // W3C downwards-diagonal-ellipsis: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='downwards-diagonal-ellipsis($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс диагональное многоточие вниз; игрек")
+}
+
+#[test]
+fn w3c_core_element_of() -> Result<()> {
+    // W3C element-of: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='element-of($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс принадлежит, игрек")
+}
+
+#[test]
+fn w3c_core_ellipsis() -> Result<()> {
+    // W3C ellipsis: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='ellipsis($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс многоточие, игрек")
+}
+
+#[test]
+fn w3c_core_embellished_name() -> Result<()> {
+    // W3C embellished-name: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='embellished-name($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс с обозначением, игрек")
+}
+
+#[test]
+fn w3c_core_empty_set() -> Result<()> {
+    // W3C empty-set: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='empty-set'>x</mi></math>";
+    all_russian_speech_modes(expr, "пустое множество")
+}
+
+#[test]
+fn w3c_core_equals() -> Result<()> {
+    // W3C equals: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='equals($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс равно игрек")
+}
+
+#[test]
+fn w3c_core_equivalent_to() -> Result<()> {
+    // W3C equivalent-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='equivalent-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс эквивалентно, игрек")
+}
+
+#[test]
+fn w3c_core_evaluated_at() -> Result<()> {
+    // W3C evaluated-at: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='evaluated-at($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс вычисленное при, игрек")
+}
+
+#[test]
+fn w3c_core_evaluates_to() -> Result<()> {
+    // W3C evaluates-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='evaluates-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс вычисляется как, игрек")
+}
+
+#[test]
+fn w3c_core_exponential() -> Result<()> {
+    // W3C exponential: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='exponential($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "экспонента икс", "экспонента от икс")
+}
+
+#[test]
+fn w3c_core_exponential_e() -> Result<()> {
+    // W3C exponential-e: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='exponential-e'>x</mi></math>";
+    all_russian_speech_modes(expr, "число е")
+}
+
+#[test]
+fn w3c_core_factorial() -> Result<()> {
+    // W3C factorial: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='factorial($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс факториал")
+}
+
+#[test]
+fn w3c_core_fenced_group() -> Result<()> {
+    // W3C fenced-group: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='fenced-group($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "выражение в скобках икс")
+}
+
+#[test]
+fn w3c_core_floor() -> Result<()> {
+    // W3C floor: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='floor($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "округление вниз икс")
+}
+
+#[test]
+fn w3c_core_for_all() -> Result<()> {
+    // W3C for-all: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='for-all($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "для всех икс")
+}
+
+#[test]
+fn w3c_core_fractional_part() -> Result<()> {
+    // W3C fractional-part: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='fractional-part($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "дробная часть икс")
+}
+
+#[test]
+fn w3c_core_given() -> Result<()> {
+    // W3C given: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='given($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс при условии, игрек")
+}
+
+#[test]
+fn w3c_core_golden_ratio() -> Result<()> {
+    // W3C golden-ratio: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='golden-ratio'>x</mi></math>";
+    all_russian_speech_modes(expr, "золотое сечение")
+}
+
+#[test]
+fn w3c_core_greater_than() -> Result<()> {
+    // W3C greater-than: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='greater-than($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс больше игрек")
+}
+
+#[test]
+fn w3c_core_greater_than_or_equal_to() -> Result<()> {
+    // W3C greater-than-or-equal-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='greater-than-or-equal-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс больше или равно, игрек")
+}
+
+#[test]
+fn w3c_core_highlight() -> Result<()> {
+    // W3C highlight: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='highlight($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс выделено")
+}
+
+#[test]
+fn w3c_core_hyperbolic_cosecant() -> Result<()> {
+    // W3C hyperbolic-cosecant: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='hyperbolic-cosecant($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "гиперболический косеканс икс", "гиперболический косеканс от икс")
+}
+
+#[test]
+fn w3c_core_hyperbolic_cosine() -> Result<()> {
+    // W3C hyperbolic-cosine: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='hyperbolic-cosine($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "гиперболический косинус икс", "гиперболический косинус от икс")
+}
+
+#[test]
+fn w3c_core_hyperbolic_cotangent() -> Result<()> {
+    // W3C hyperbolic-cotangent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='hyperbolic-cotangent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "гиперболический котангенс икс", "гиперболический котангенс от икс")
+}
+
+#[test]
+fn w3c_core_hyperbolic_secant() -> Result<()> {
+    // W3C hyperbolic-secant: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='hyperbolic-secant($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "гиперболический секанс икс", "гиперболический секанс от икс")
+}
+
+#[test]
+fn w3c_core_hyperbolic_sine() -> Result<()> {
+    // W3C hyperbolic-sine: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='hyperbolic-sine($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "гиперболический синус икс", "гиперболический синус от икс")
+}
+
+#[test]
+fn w3c_core_hyperbolic_tangent() -> Result<()> {
+    // W3C hyperbolic-tangent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='hyperbolic-tangent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "гиперболический тангенс икс", "гиперболический тангенс от икс")
+}
+
+#[test]
+fn w3c_core_identically_equals() -> Result<()> {
+    // W3C identically-equals: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='identically-equals($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс тождественно равно, игрек")
+}
+
+#[test]
+fn w3c_core_identity_matrix() -> Result<()> {
+    // W3C identity-matrix: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='identity-matrix'>x</mi></math>";
+    all_russian_speech_modes(expr, "единичная матрица")
+}
+
+#[test]
+fn w3c_core_if_and_only_if() -> Result<()> {
+    // W3C if-and-only-if: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='if-and-only-if($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс тогда и только тогда когда; игрек")
+}
+
+#[test]
+fn w3c_core_imaginary_i() -> Result<()> {
+    // W3C imaginary-i: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='imaginary-i'>x</mi></math>";
+    all_russian_speech_modes(expr, "мнимая единица")
+}
+
+#[test]
+fn w3c_core_implies() -> Result<()> {
+    // W3C implies: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='implies($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс влечёт игрек")
+}
+
+#[test]
+fn w3c_core_inner_product() -> Result<()> {
+    // W3C inner-product: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='inner-product($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс скалярное произведение; игрек")
+}
+
+#[test]
+fn w3c_core_intersection() -> Result<()> {
+    // W3C intersection: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='intersection($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс пересечение, игрек")
+}
+
+#[test]
+fn w3c_core_inverse() -> Result<()> {
+    // W3C inverse: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='inverse($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "обратный к икс")
+}
+
+#[test]
+fn w3c_core_least_common_denominator() -> Result<()> {
+    // W3C least-common-denominator: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='least-common-denominator($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "наименьший общий знаменатель икс и игрек")
+}
+
+#[test]
+fn w3c_core_length() -> Result<()> {
+    // W3C length: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='length($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "длина икс")
+}
+
+#[test]
+fn w3c_core_less_than() -> Result<()> {
+    // W3C less-than: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='less-than($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс меньше игрек")
+}
+
+#[test]
+fn w3c_core_less_than_or_equal_to() -> Result<()> {
+    // W3C less-than-or-equal-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='less-than-or-equal-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс меньше или равно, игрек")
+}
+
+#[test]
+fn w3c_core_line() -> Result<()> {
+    // W3C line: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='line($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "прямая икс игрек")
+}
+
+#[test]
+fn w3c_core_list() -> Result<()> {
+    // W3C list: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='list'>x</mi></math>";
+    all_russian_speech_modes(expr, "список")
+}
+
+#[test]
+fn w3c_core_list_separator() -> Result<()> {
+    // W3C list-separator: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='list-separator($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс запятая игрек")
+}
+
+#[test]
+fn w3c_core_logarithm() -> Result<()> {
+    // W3C logarithm: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='logarithm($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "логарифм по основанию игрек от икс")
+}
+
+#[test]
+fn w3c_core_maps_to() -> Result<()> {
+    // W3C maps-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='maps-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс отображается в, игрек")
+}
+
+#[test]
+fn w3c_core_max() -> Result<()> {
+    // W3C max: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='max($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "максимум икс")
+}
+
+#[test]
+fn w3c_core_mean() -> Result<()> {
+    // W3C mean: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='mean($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "среднее икс")
+}
+
+#[test]
+fn w3c_core_measured_angle() -> Result<()> {
+    // W3C measured-angle: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='measured-angle($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "измеренный угол икс")
+}
+
+#[test]
+fn w3c_core_median() -> Result<()> {
+    // W3C median: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='median($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "медиана икс")
+}
+
+#[test]
+fn w3c_core_member_of() -> Result<()> {
+    // W3C member-of: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='member-of($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс принадлежит, игрек")
+}
+
+#[test]
+fn w3c_core_min() -> Result<()> {
+    // W3C min: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='min($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "минимум икс")
+}
+
+#[test]
+fn w3c_core_minus_or_plus() -> Result<()> {
+    // W3C minus-or-plus: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='minus-or-plus($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс минус плюс, игрек")
+}
+
+#[test]
+fn w3c_core_mixed_fraction() -> Result<()> {
+    // W3C mixed-fraction: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='mixed-fraction($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс и игрек")
+}
+
+#[test]
+fn w3c_core_mode() -> Result<()> {
+    // W3C mode: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='mode($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "мода икс")
+}
+
+#[test]
+fn w3c_core_not() -> Result<()> {
+    // W3C not: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='not($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "не икс")
+}
+
+#[test]
+fn w3c_core_not_equal_to() -> Result<()> {
+    // W3C not-equal-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='not-equal-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс не равно игрек")
+}
+
+#[test]
+fn w3c_core_not_member_of() -> Result<()> {
+    // W3C not-member-of: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='not-member-of($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс не принадлежит, игрек")
+}
+
+#[test]
+fn w3c_core_not_parallel_to() -> Result<()> {
+    // W3C not-parallel-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='not-parallel-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс не параллельно, игрек")
+}
+
+#[test]
+fn w3c_core_not_subset() -> Result<()> {
+    // W3C not-subset: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='not-subset($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс не является подмножеством; игрек")
+}
+
+#[test]
+fn w3c_core_not_superset() -> Result<()> {
+    // W3C not-superset: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='not-superset($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс не является надмножеством; игрек")
+}
+
+#[test]
+fn w3c_core_number_of() -> Result<()> {
+    // W3C number-of: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='number-of($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "число икс")
+}
+
+#[test]
+fn w3c_core_obtained_from() -> Result<()> {
+    // W3C obtained-from: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='obtained-from($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс получено из, игрек")
+}
+
+#[test]
+fn w3c_core_or() -> Result<()> {
+    // W3C or: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='or($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс или игрек")
+}
+
+#[test]
+fn w3c_core_ordered_pair() -> Result<()> {
+    // W3C ordered-pair: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='ordered-pair($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "упорядоченная пара икс и игрек")
+}
+
+#[test]
+fn w3c_core_outer_product() -> Result<()> {
+    // W3C outer-product: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='outer-product($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс внешнее произведение, игрек")
+}
+
+#[test]
+fn w3c_core_parallel_to() -> Result<()> {
+    // W3C parallel-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='parallel-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс параллельно, игрек")
+}
+
+#[test]
+fn w3c_core_partial_derivative() -> Result<()> {
+    // W3C partial-derivative: localizes the concept and retains all 3 arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='partial-derivative($a0,$a1,$a2)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi><mi arg='a2'>z</mi></mrow></math>";
+    all_russian_speech_modes(expr, "частная производная икс по игрек порядка зэт")
+}
+
+#[test]
+fn w3c_core_percent() -> Result<()> {
+    // W3C percent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='percent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс процентов")
+}
+
+#[test]
+fn w3c_core_permutation_cycle() -> Result<()> {
+    // W3C permutation-cycle: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='permutation-cycle($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "цикл перестановки икс запятая игрек")
+}
+
+#[test]
+fn w3c_core_plus_or_minus() -> Result<()> {
+    // W3C plus-or-minus: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='plus-or-minus($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс плюс минус, игрек")
+}
+
+#[test]
+fn w3c_core_polar_coordinate() -> Result<()> {
+    // W3C polar-coordinate: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='polar-coordinate($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "полярные координаты икс запятая игрек")
+}
+
+#[test]
+fn w3c_core_precedes() -> Result<()> {
+    // W3C precedes: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='precedes($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс предшествует, игрек")
+}
+
+#[test]
+fn w3c_core_probability() -> Result<()> {
+    // W3C probability: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='probability($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "вероятность икс")
+}
+
+#[test]
+fn w3c_core_product() -> Result<()> {
+    // W3C product: localizes the concept and retains all 3 arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='product($a0,$a1,$a2)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi><mi arg='a2'>z</mi></mrow></math>";
+    all_russian_speech_modes(expr, "произведение от икс до игрек выражения зэт")
+}
+
+#[test]
+fn w3c_core_proportional() -> Result<()> {
+    // W3C proportional: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='proportional($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс пропорционально, игрек")
+}
+
+#[test]
+fn w3c_core_quotient() -> Result<()> {
+    // W3C quotient: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='quotient($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "целая часть результата деления икс на игрек")
+}
+
+#[test]
+fn w3c_core_radius() -> Result<()> {
+    // W3C radius: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='radius($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "радиус икс")
+}
+
+#[test]
+fn w3c_core_range_separator() -> Result<()> {
+    // W3C range-separator: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='range-separator($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс до игрек")
+}
+
+#[test]
+fn w3c_core_rate() -> Result<()> {
+    // W3C rate: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='rate($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс на игрек")
+}
+
+#[test]
+fn w3c_core_ratio() -> Result<()> {
+    // W3C ratio: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='ratio($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "отношение икс к игрек")
+}
+
+#[test]
+fn w3c_core_remainder() -> Result<()> {
+    // W3C remainder: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='remainder($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "остаток от деления икс на игрек")
+}
+
+#[test]
+fn w3c_core_right_angle() -> Result<()> {
+    // W3C right-angle: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='right-angle($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "прямой угол икс")
+}
+
+#[test]
+fn w3c_core_round() -> Result<()> {
+    // W3C round: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='round($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "округлённое значение икс")
+}
+
+#[test]
+fn w3c_core_secant() -> Result<()> {
+    // W3C secant: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='secant($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "секанс икс", "секанс от икс")
+}
+
+#[test]
+fn w3c_core_set_difference() -> Result<()> {
+    // W3C set-difference: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='set-difference($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "разность множеств икс и игрек")
+}
+
+#[test]
+fn w3c_core_set_of_complex_numbers() -> Result<()> {
+    // W3C set-of-complex-numbers: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='set-of-complex-numbers'>x</mi></math>";
+    all_russian_speech_modes(expr, "комплексные числа")
+}
+
+#[test]
+fn w3c_core_set_of_integers() -> Result<()> {
+    // W3C set-of-integers: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='set-of-integers'>x</mi></math>";
+    all_russian_speech_modes(expr, "целые числа")
+}
+
+#[test]
+fn w3c_core_set_of_natural_numbers() -> Result<()> {
+    // W3C set-of-natural-numbers: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='set-of-natural-numbers'>x</mi></math>";
+    all_russian_speech_modes(expr, "натуральные числа")
+}
+
+#[test]
+fn w3c_core_set_of_primes() -> Result<()> {
+    // W3C set-of-primes: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='set-of-primes'>x</mi></math>";
+    all_russian_speech_modes(expr, "простые числа")
+}
+
+#[test]
+fn w3c_core_set_of_rationals() -> Result<()> {
+    // W3C set-of-rationals: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='set-of-rationals'>x</mi></math>";
+    all_russian_speech_modes(expr, "рациональные числа")
+}
+
+#[test]
+fn w3c_core_set_of_reals() -> Result<()> {
+    // W3C set-of-reals: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='set-of-reals'>x</mi></math>";
+    all_russian_speech_modes(expr, "действительные числа")
+}
+
+#[test]
+fn w3c_core_similar() -> Result<()> {
+    // W3C similar: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='similar($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс подобно игрек")
+}
+
+#[test]
+fn w3c_core_sine() -> Result<()> {
+    // W3C sine: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='sine($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "синус икс", "синус от икс")
+}
+
+#[test]
+fn w3c_core_span() -> Result<()> {
+    // W3C span: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='span($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "линейная оболочка икс")
+}
+
+#[test]
+fn w3c_core_spherical_coordinate() -> Result<()> {
+    // W3C spherical-coordinate: localizes the concept and retains all 3 arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='spherical-coordinate($a0,$a1,$a2)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi><mi arg='a2'>z</mi></mrow></math>";
+    all_russian_speech_modes(expr, "сферические координаты икс запятая игрек запятая зэт")
+}
+
+#[test]
+fn w3c_core_square_root_of() -> Result<()> {
+    // W3C square-root-of: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='square-root-of($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "квадратный корень из икс")
+}
+
+#[test]
+fn w3c_core_standard_deviation() -> Result<()> {
+    // W3C standard-deviation: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='standard-deviation($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "стандартное отклонение икс")
+}
+
+#[test]
+fn w3c_core_subset() -> Result<()> {
+    // W3C subset: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='subset($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс является подмножеством; игрек")
+}
+
+#[test]
+fn w3c_core_subset_or_equal() -> Result<()> {
+    // W3C subset-or-equal: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='subset-or-equal($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс является подмножеством или равно; игрек")
+}
+
+#[test]
+fn w3c_core_succeeds() -> Result<()> {
+    // W3C succeeds: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='succeeds($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс следует за, игрек")
+}
+
+#[test]
+fn w3c_core_such_that() -> Result<()> {
+    // W3C such-that: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='such-that($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс таких что игрек")
+}
+
+#[test]
+fn w3c_core_sum() -> Result<()> {
+    // W3C sum: localizes the concept and retains all 3 arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='sum($a0,$a1,$a2)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi><mi arg='a2'>z</mi></mrow></math>";
+    all_russian_speech_modes(expr, "сумма от икс до игрек выражения зэт")
+}
+
+#[test]
+fn w3c_core_superset() -> Result<()> {
+    // W3C superset: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='superset($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс является надмножеством; игрек")
+}
+
+#[test]
+fn w3c_core_superset_or_equal() -> Result<()> {
+    // W3C superset-or-equal: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='superset-or-equal($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс является надмножеством или равно; игрек")
+}
+
+#[test]
+fn w3c_core_tangent() -> Result<()> {
+    // W3C tangent: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='tangent($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    russian_speech_verbosities(expr, "тангенс икс", "тангенс от икс")
+}
+
+#[test]
+fn w3c_core_tends_to() -> Result<()> {
+    // W3C tends-to: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='tends-to($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс стремится к, игрек")
+}
+
+#[test]
+fn w3c_core_tends_to_from_above() -> Result<()> {
+    // W3C tends-to-from-above: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='tends-to-from-above($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс стремится сверху к, игрек")
+}
+
+#[test]
+fn w3c_core_tends_to_from_below() -> Result<()> {
+    // W3C tends-to-from-below: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='tends-to-from-below($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс стремится снизу к, игрек")
+}
+
+#[test]
+fn w3c_core_there_does_not_exist() -> Result<()> {
+    // W3C there-does-not-exist: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='there-does-not-exist($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "не существует икс")
+}
+
+#[test]
+fn w3c_core_there_exists() -> Result<()> {
+    // W3C there-exists: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='there-exists($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "существует икс")
+}
+
+#[test]
+fn w3c_core_tilde() -> Result<()> {
+    // W3C tilde: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='tilde($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс тильда игрек")
+}
+
+#[test]
+fn w3c_core_time_separator() -> Result<()> {
+    // W3C time-separator: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='time-separator($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс игрек")
+}
+
+#[test]
+fn w3c_core_times() -> Result<()> {
+    // W3C times: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='times($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс умножить на, игрек")
+}
+
+#[test]
+fn w3c_core_translation() -> Result<()> {
+    // W3C translation: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='translation($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "перенос на икс запятая игрек")
+}
+
+#[test]
+fn w3c_core_tuple() -> Result<()> {
+    // W3C tuple: localizes the standalone concept name, in both styles and all verbosities.
+    let expr = "<math><mi intent='tuple'>x</mi></math>";
+    all_russian_speech_modes(expr, "кортеж")
+}
+
+#[test]
+fn w3c_core_union() -> Result<()> {
+    // W3C union: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='union($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс объединение, игрек")
+}
+
+#[test]
+fn w3c_core_unit_vector() -> Result<()> {
+    // W3C unit-vector: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='unit-vector($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "единичный вектор икс")
+}
+
+#[test]
+fn w3c_core_upwards_diagonal_ellipsis() -> Result<()> {
+    // W3C upwards-diagonal-ellipsis: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='upwards-diagonal-ellipsis($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс диагональное многоточие вверх; игрек")
+}
+
+#[test]
+fn w3c_core_variance() -> Result<()> {
+    // W3C variance: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='variance($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "дисперсия икс")
+}
+
+#[test]
+fn w3c_core_vertical_ellipsis() -> Result<()> {
+    // W3C vertical-ellipsis: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='vertical-ellipsis($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс вертикальное многоточие; игрек")
+}
+
+#[test]
+fn w3c_core_volume() -> Result<()> {
+    // W3C volume: localizes the concept and retains its argument, in both styles and all verbosities.
+    let expr = "<math><mrow intent='volume($a0)'><mi arg='a0'>x</mi></mrow></math>";
+    all_russian_speech_modes(expr, "объём икс")
+}
+
+#[test]
+fn w3c_core_xor() -> Result<()> {
+    // W3C xor: localizes the concept and retains both arguments, in both styles and all verbosities.
+    let expr = "<math><mrow intent='xor($a0,$a1)'><mi arg='a0'>x</mi><mi arg='a1'>y</mi></mrow></math>";
+    all_russian_speech_modes(expr, "икс исключающее или, игрек")
 }
 
 #[test]
