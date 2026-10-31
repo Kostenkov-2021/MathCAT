@@ -428,7 +428,8 @@
   - NumColumns: "count(*[1]/*) - IfThenElse(*/self::m:mlabeledtr, 1, 0)"
   match: "."
   replace:
-  - t: "table with"      # phrase(the 'table with' 3 rows)
+  - x: "IfThenElse(self::m:mtable, 'table', 'array')"
+  - t: "with"      # phrase(the 'table with' 3 rows)
   - x: count(*)
   - test:
       if: count(*)=1
